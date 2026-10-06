@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Found Items</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Nunito', Arial, sans-serif;
+    overflow-x:hidden;
+    background:#f5f6fa;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+    position:fixed;
+    top:15px;
+    left:15px;
+    bottom:15px;
+    width:250px;
+    background: white;
+    border:1px solid #dee2e6;
+    border-radius:12px;
+    padding:20px 15px;
+    display:flex;
+    flex-direction:column;
+    transition: transform 0.7s ease-in-out;
+    z-index:1050;
+}
+
+.sidebar hr{
+    border-color:#E7ECE9;
+    margin:0 0 14px;
+    opacity:1;
+}
+
+.sidebar .nav-section-label{
+    font-size:10.5px;
+    font-weight:700;
+    color: #7C8A85;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    padding:6px 15px 8px;
+}
+
+.sidebar a{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 14px;
+    margin-bottom:4px;
+    border-radius:10px;
+    text-decoration:none;
+    color:#4B5A54;
+    font-weight:600;
+    font-size:14px;
+    position:relative;
+    transition:.2s ease;
+}
+
+.sidebar a i{
+    font-size:16px;
+    width:18px;
+    text-align:center;
+    color:#8CA298;
+    transition:.2s ease;
+}
+
+.sidebar a:hover{
+    background: #E8F7EF;
+    color: #198754;
+}
+
+.sidebar a:hover i{
+    color: #198754;
+}
+
+.sidebar a.active{
+    background:linear-gradient(135deg, #198754, #147a49);
+    color:#fff;
+    box-shadow:0 6px 14px rgba(25,135,84,0.25);
+}
+
+.sidebar a.active i{
+    color:#fff;
+}
+
+.logout-btn{
+    margin-top:auto;
+    border:1px solid #ddd;
+}
+
+.logout-btn:hover{
+    background:#FCEAED !important;
+    color: #E1596B !important;
+    border: 1px solid #E1596B;
+}
+
+.logout-btn:hover i{
+    color: #E1596B !important;
+}
+
+/* =============== NAVBAR TOP =============== */
+.navbar-top {
+    position: fixed;
+    top: 0;
+    left: 290px;
+    right: 15px;
+    height: 70px;
+    background: inherit;
+    border-radius: 0 0 12px 12px;
+    z-index: 1010;
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar-custom{
+    position: sticky;
+    top:15px;
+    margin-top:15px;
+    margin-left:290px;
+    margin-right:15px;
+    background:#fff;
+    border:1px solid #dee2e6;
+    border-radius:12px;
+    padding:16px 25px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:1020;
+}
+
+.navbar-title{
+    font-size:18px;
+    font-weight: 900;
+    margin:0;
+}
+
+.navbar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.navbar-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.icon{
+    font-size:20px;
+    color:#6c757d;
+    cursor:pointer;
+}
+
+.profile-img{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid #ddd;
+}
+
+/* ================= OVERLAY ================= */
+
+#overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.3);
+    backdrop-filter:blur(2px);
+    opacity:0;
+    visibility:hidden;
+    transition:.3s;
+    z-index:1040;
+}
+
+#overlay.show{
+    opacity:1;
+    visibility:visible;
+}
+
+.btn-close-outside{
+    display:none;
+}
+
+.menu-toggle-btn{
+    display:none;
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.main-content{
+    margin-left:290px;
+    margin-right:15px;
+    margin-top:15px;
+    padding-bottom:60px;
+}
+
+.page-heading{
+    font-weight:800;
+    font-size:21px;
+    margin-bottom:2px;
+    color: #0F1B2D;
+}
+
+.page-subheading{
+    font-size:13px;
+    color: #7C8A85;
+    font-weight:600;
+}
+
+/* ====================== TOOLBAR ===================== */
+
+.toolbar{
+    background:#fff;
+    border:1px solid #E7ECE9;
+    border-radius:14px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    box-shadow:0 4px 20px rgba(20,60,40,0.04);
+}
+
+.search-box{
+    flex:1;
+    min-width:220px;
+    position:relative;
+}
+
+.search-box i{
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#8CA298;
+    font-size:14px;
+}
+
+.search-box input{
+    width:100%;
+    border:1px solid #E7ECE9;
+    border-radius:10px;
+    padding:10px 14px 10px 38px;
+    font-size:13.5px;
+    font-weight:600;
+    color:#0F1B2D;
+    background:#f9fbfa;
+}
+
+.search-box input:focus{
+    outline:none;
+    border-color:#198754;
+    background:#fff;
+}
+
+.filter-select{
+    border:1px solid #E7ECE9;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13px;
+    font-weight:700;
+    color:#4B5A54;
+    background:#f9fbfa;
+    min-width:150px;
+}
+
+.filter-select:focus{
+    outline:none;
+    border-color:#198754;
+}
+
+.btn-report{
+    background:linear-gradient(135deg, #198754, #147a49);
+    color:#fff;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:13.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+}
+
+/* status pill filters */
+.status-pills{
+    display:flex;
+    gap:8px;
+    margin:16px 0 18px;
+    flex-wrap:wrap;
+}
+
+.status-pill{
+    border:1px solid #E7ECE9;
+    background:#fff;
+    color:#4B5A54;
+    font-weight:700;
+    font-size:12.5px;
+    padding:8px 16px;
+    border-radius:30px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.status-pill.active{
+    background:#0F1B2D;
+    color:#fff;
+    border-color:#0F1B2D;
+}
+
+.status-pill:hover:not(.active){
+    background:#f5f6fa;
+}
+
+/* ====================== ITEM CARDS ===================== */
+
+.item-card{
+    background:#fff;
+    border:1px solid #E7ECE9;
+    border-radius:14px;
+    overflow:hidden;
+    height:100%;
+    transition:.2s ease;
+}
+
+.item-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 14px 30px rgba(20,60,40,0.08);
+    border-color:#dcefe4;
+}
+
+.item-thumb{
+    height:130px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    position:relative;
+}
+
+.item-status{
+    position:absolute;
+    top:10px;
+    right:10px;
+    font-size:10px;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:20px;
+}
+
+.status-found{background:#E8F7EF;color:#198754;}
+.status-matched{background:#FFF4E5;color:#B8860B;}
+.status-claimed{background:#EAF1FF;color:#3366CC;}
+
+.item-body{
+    padding:14px 16px 16px;
+}
+
+.item-title{
+    font-weight:800;
+    font-size:14px;
+    margin-bottom:6px;
+    color:#0F1B2D;
+}
+
+.item-meta{
+    font-size:11.5px;
+    color:#7C8A85;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:4px;
+}
+
+.item-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid #F0F2F1;
+}
+
+.item-date{
+    font-size:11px;
+    color:#9AA6A1;
+    font-weight:700;
+}
+
+.btn-view{
+    color:#198754;
+    font-weight:800;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:992px){
+
+    .sidebar{
+        top:0px;
+        left:0px;
+        bottom:0px;
+        width:300px;
+        border-radius:0;
+        transform:translateX(-200%);
+    }
+
+    .sidebar.show{
+        transform:translateX(0);
+    }
+
+    .sidebar .btn-close-outside {
+        display: none;
+    }
+
+    .navbar-top{
+        display: none;
+    }
+
+    .navbar-custom{
+        margin:0;
+        border-radius:0;
+        top:0;
+        border-left:none;
+        border-right:none;
+    }
+
+    .main-content{
+        margin-left:15px;
+    }
+
+    .menu-toggle-btn{
+        display:block;
+    }
+
+    .btn-close-outside{
+        position:absolute;
+        top:10px;
+        right:-50px;
+        width:40px;
+        height:40px;
+        border-radius:50%;
+        background:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show .btn-close-outside{
+        display:flex;
+    }
+
+    .toolbar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .btn-report{
+        justify-content:center;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="overlay"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar shadow-sm" id="sidebar">
+    <div class="btn-close-outside" onclick="toggleSidebar()">
+        <i class="fas fa-times" style="margin-left: -1px;"></i>
+    </div>
+
+    <hr>
+
+    <div class="nav-section-label">Main</div>
+    <a href="#"> <i class="bi bi-speedometer2"></i> Dashboard </a>
+    <a href="#"> <i class="bi bi-people"></i> Staff </a>
+
+    <a href="#"> <i class="bi bi-plus-lg"></i> Create </a>
+    <a href="#"> <i class="bi bi-journal-text"></i> List </a>
+    <a href="#"> <i class="bi bi-layers"></i> Match Items </a>
+    <a href="#" class="active"> <i class="bi bi-search"></i> Found Items </a>
+    <a href="#"> <i class="bi bi-clipboard-data"></i> Audit Trail </a>
+    <a href="#"> <i class="bi bi-graph-up-arrow"></i> Statistic </a>
+    <div class="nav-section-label">Other</div>
+    <a href="#"> <i class="bi bi-calendar-event"></i> Calendar </a>
+    <a href="#"> <i class="bi bi-lock" style="display: inline-block; transform: scaleX(1.4);"></i> Change Password </a>
+    <a href="#" class="logout-btn"> <i class="bi bi-box-arrow-right"></i> Logout </a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar-custom shadow-sm">
+    <div class="navbar-left">
+        <img src="https://picsum.photos/200" class="profile-img d-lg-none">
+        <h5 class="navbar-title text-success" style="font-family:'Nunito', Arial, sans-serif;">
+            Found Items
+        </h5>
+    </div>
+
+    <div class="navbar-right">
+        <i class="fa-solid fa-bars icon menu-toggle-btn" onclick="toggleSidebar()"></i>
+    </div>
+</nav>
+
+<!-- TOP NAVBAR -->
+<div class="navbar-top"></div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mt-4 mb-3">
+        <div>
+            <div class="page-heading">Found Items</div>
+            <div class="page-subheading">Browse everything currently logged as found on campus.</div>
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search by item name, location, or keyword...">
+        </div>
+        <select class="filter-select">
+            <option>All Categories</option>
+            <option>Electronics</option>
+            <option>Wallets & Bags</option>
+            <option>Keys</option>
+            <option>Documents / ID</option>
+            <option>Clothing & Accessories</option>
+            <option>Others</option>
+        </select>
+        <select class="filter-select">
+            <option>All Locations</option>
+            <option>Library</option>
+            <option>Canteen</option>
+            <option>Gymnasium</option>
+            <option>Main Gate</option>
+            <option>Classrooms</option>
+        </select>
+        <button class="btn-report"><i class="bi bi-plus-lg"></i> Log Found Item</button>
+    </div>
+
+    <!-- STATUS FILTER PILLS -->
+    <div class="status-pills">
+        <div class="status-pill active">All</div>
+        <div class="status-pill">Found</div>
+        <div class="status-pill">Matched</div>
+        <div class="status-pill">Claimed</div>
+    </div>
+
+    <!-- ITEMS GRID -->
+    <div class="row g-3">
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#E8F7EF;color:#198754;">
+                    <i class="bi bi-wallet2"></i>
+                    <span class="item-status status-found">Found</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Brown Leather Wallet</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Library, 2F</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Wallets & Bags</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 15, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#FFF4E5;color:#B8860B;">
+                    <i class="bi bi-phone"></i>
+                    <span class="item-status status-matched">Matched</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Samsung Phone, cracked case</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Canteen</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Electronics</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 14, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#EAF1FF;color:#3366CC;">
+                    <i class="bi bi-key"></i>
+                    <span class="item-status status-claimed">Claimed</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Keys with red lanyard</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Gymnasium</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Keys</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 13, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#E8F7EF;color:#198754;">
+                    <i class="bi bi-umbrella"></i>
+                    <span class="item-status status-found">Found</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Black Foldable Umbrella</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Main Gate</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Others</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 12, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#FCEAED;color:#E1596B;">
+                    <i class="bi bi-credit-card-2-front"></i>
+                    <span class="item-status status-found">Found</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">School ID - Nursing Dept.</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Classroom 204</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Documents / ID</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 11, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#F1EAFC;color:#7C4DFF;">
+                    <i class="bi bi-headphones"></i>
+                    <span class="item-status status-found">Found</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Wireless Earbuds, white case</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Library, 1F</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Electronics</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 10, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#E8F7EF;color:#198754;">
+                    <i class="bi bi-bag"></i>
+                    <span class="item-status status-matched">Matched</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Gray Backpack</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Gymnasium</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Wallets & Bags</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 9, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <div class="item-card">
+                <div class="item-thumb" style="background:#FFF4E5;color:#B8860B;">
+                    <i class="bi bi-watch"></i>
+                    <span class="item-status status-claimed">Claimed</span>
+                </div>
+                <div class="item-body">
+                    <div class="item-title">Silver Wristwatch</div>
+                    <div class="item-meta"><i class="bi bi-geo-alt"></i> Canteen</div>
+                    <div class="item-meta"><i class="bi bi-tag"></i> Others</div>
+                    <div class="item-footer">
+                        <span class="item-date">Aug 8, 2026</span>
+                        <a href="#" class="btn-view">View <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleSidebar(){
+    document.getElementById("sidebar")
+    .classList.toggle("show");
+
+    document.getElementById("overlay")
+    .classList.toggle("show");
+}
+
+document.getElementById("overlay")
+.addEventListener("click", function(){
+    document.getElementById("sidebar")
+    .classList.remove("show");
+
+    this.classList.remove("show");
+});
+
+window.addEventListener("resize", ()=>{
+
+    if(window.innerWidth >= 992){
+        document.getElementById("sidebar")
+        .classList.remove("show");
+
+        document.getElementById("overlay")
+        .classList.remove("show");
+    }
+});
+
+/* STATUS PILL FILTER (visual only, no backend) */
+document.querySelectorAll(".status-pill").forEach(pill=>{
+    pill.addEventListener("click", function(){
+        document.querySelectorAll(".status-pill").forEach(p=>p.classList.remove("active"));
+        this.classList.add("active");
+    });
+});
+
+</script>
+
+</body>
+</html>

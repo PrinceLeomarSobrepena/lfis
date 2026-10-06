@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found</title>
+
+    <link rel="stylesheet" href="/public/css/style.css">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /*** Spinner ***/
+.spinner-wrapper{
+    background-color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.75s;
+   transition: opacity 0.75s, visibility 0.75s;
+}
+
+.spinner-border{
+    height: 60px;
+    width: 60px;
+}
+
+            *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+    }
+
+    body{
+        font-family:Arial, sans-serif;
+        overflow-x:hidden;
+        /* background:#f5f6fa; */
+        padding-top: 70px;
+    }
+
+    /** Navbar **/
+    .navbar {
+        padding: 0px 10px;
+        /* padding: 17px 10px; */
+       font-family: 'Nunito', sans-serif;
+    }
+    .navbar-nav .nav-link {
+        color: black; /* #6c757d */
+        font-size: 16px;
+        line-height: 23px;
+        font-weight: 600;
+        margin: 0 10px;
+        transition: 0.3s;
+    }
+    .navbar-nav .nav-link:hover{
+        color: #198754; /* Bootstrap green */
+    }
+    .navbar-nav .nav-link.active {
+        color: #198754;
+        font-weight: 700;
+    }
+    .navbar-brand img {
+        object-fit: cover;
+    }
+
+    /** Hero **/
+    .hero-section {
+        /*height: 350px;*/
+         height: calc(100vh - 70px);
+        /* background: linear-gradient(135deg, #0d6efd, #6610f2); */
+        background: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.5)), url('/public/img/hero.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    .hero-title-anim{
+        animation: heroTitleAnim .9s forwards;
+    }
+    @keyframes heroTitleAnim{
+        from{
+            transform: translateY(-150%);
+        }
+        to{
+            transform: translateY(0);
+        }
+    }
+
+    .hero-text-anim{
+        animation: heroTextAnim .8s forwards;
+    }
+    @keyframes heroTextAnim{
+        from{
+            transform: translateX(-5%);
+        }
+        to{
+            transform: translateX(0);
+        }
+    }
+
+    .hero-btn1-anim{
+        animation: heroBtn1Anim .7s forwards;
+    }
+    @keyframes heroBtn1Anim{
+        from{
+            transform: translateX(-100%);
+        }
+        to{
+            transform: translateX(0);
+        }
+    }
+
+    .hero-btn2-anim{
+        animation: heroBtn2Anim .7s forwards;
+    }
+    @keyframes heroBtn2Anim{
+        from{
+            transform: translateX(100%);
+        }
+        to{
+            transform: translateX(0);
+        }
+    }
+
+    /* MOBILE FIX */
+    @media (max-width: 991px) {
+        .navbar {
+            /* height: 70px; */
+            padding: 0px 10px; /*10 25px */
+        }
+
+        .navbar-nav {
+            margin-top: 10px;
+            text-align: left;
+             margin-bottom: 10px;
+        }
+
+        .navbar-nav .nav-item {
+            padding: 0px 0; /* 🔥6px mas dikit */
+            /* background-color: red; */
+        }
+
+        /* DITO */
+        .navbar-nav .nav-link {
+
+            transition: all 0.3s ease;
+            padding-left: 10px;
+        }
+
+        .navbar-nav .nav-link:hover {
+            /* color: #198754; */
+            background-color: #f9f9f9;
+            padding-left: 18px;
+            border-radius: 4px;
+        }
+
+        .navbar-toggler {
+            border: none;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+
+        .hero-text-anim{
+            animation: heroTextAnim .8s forwards;
+        }
+        @keyframes heroTextAnim{
+            from{
+                transform: translateX(-20%);
+            }
+            to{
+                transform: translateX(0);
+            }
+        }
+        
+    }
+
+    @media (max-width: 576px) {
+        .hero-section{
+            height: 100vh;
+        }
+        #heroTitle{
+            font-size: 18px !important;
+        }
+
+        body{
+            padding-top: 0px;
+        }
+    }
+
+    /* .custom-container{
+        transition: padding-left 0.4s ease, padding-right 0.4s ease;
+    } */
+    @media (min-width: 1200px) {
+        .navbar{
+            padding-left:  119px; /*217 119*/
+            padding-right: 119px;
+        }
+
+        .custom-container {
+            padding-left: 113px; /*217   109*/
+            padding-right: 113px;
+        }
+    }
+    </style>
+</head>
+<body>
+        <!-- Spinner Start -->
+    <div class="spinner-wrapper">
+        <div class="spinner-border" style="color:#198754">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <!-- Spinner End -->
+
+    <!-- Navbar -->
+    <section>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container-fluid">
+            <!-- LEFT -->
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="../public/img/sha33.png" alt="Logo" width="60" height="60" class="rounded-circle me-2">
+                <span class="fw-bold text-success">LFIS</span>
+            </a>
+
+            <!-- TOGGLE BUTTON -->
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+ 
+
+            <!-- CENTER-->
+            <div class="collapse navbar-collapse" id="mainNavbar">
+
+                <!-- CENTER -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">HOME</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">LOST</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">FOUND</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">CONTACT</a>
+                    </li>
+
+                    <li class="nav-item mb-4 mb-lg-0">
+                        <a class="nav-link" href="#">READ MORE</a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+    </section>
+
+
+    <!-- Hero Section -->
+    <section class="hero-section d-flex align-items-center">
+        <div class="container text-center">
+            <p id="heroTitle" class="lead text-white text-uppercase fs-5 mb-1">Lost and Found Information System</p>
+            <h1  id="heroText" class="display-4 fw-bold text-white mb-2" style="font-family: 'Nunito', Arial, sans-serif;">Lost Something? Found Something?</h1>
+            <!-- <a href="#" class="btn btn-success " style="font-size: 17px;">Get Started</a>
+             <a href="#" class="btn btn-light btn-lg" style="font-size: 17px;">Get Started</a> <br> -->
+            <a href="#about"  id="heroBtn1" class="sliding3 border1 btn bg-success btn-sm rounded-0 px-4 py-2 fw-bold text-uppercase text-white me-2">Learn more</a>
+            <a href="#ReadMore" id="heroBtn2" class="sliding4 btn btn-light btn-sm rounded-0 px-4 py-2 fw-bold text-uppercase text-black bg-white">Read more</a>
+        </div>
+    </section>
+
+    <!-- 3 Steps Section -->
+<section class="py-5">
+    <div class="container text-center">
+
+        <h2 class="mb-5 fw-bold">How It Works</h2>
+
+        <div class="row g-4">
+
+            <!-- Step 1 -->
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-body">
+                        <div class="display-5 mb-3">1️⃣</div>
+                        <h5 class="fw-bold">Report Lost Item</h5>
+                        <p class="text-muted">
+                            I-submit ang details ng nawalang item para madaling mahanap.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-body">
+                        <div class="display-5 mb-3">2️⃣</div>
+                        <h5 class="fw-bold">Search & Match</h5>
+                        <p class="text-muted">
+                            I-search ang database para makita kung may nakatagpo na nito. sa database naka store lahat ng data hahhaahah tama nga
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-body">
+                        <div class="display-5 mb-3">3️⃣</div>
+                        <h5 class="fw-bold">Reunite Item</h5>
+                        <p class="text-muted">
+                            Makipag-connect at maibalik ang lost item sa may-ari.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+    <!-- Sumary -->
+    <section class="py-5">
+        <div class="container text-center">
+            <h2>Reservation Summary</h2>
+            <div class="row">
+                <div class="col-md-3"><div class="alert alert-secondary">Total Customers: <?= $totalCustomers ?></div></div>
+                <div class="col-md-3"><div class="alert alert-success">Customers with Reservations: <?= $numCustomersReserved ?></div></div>
+                <div class="col-md-3"><div class="alert alert-warning">Customers without Reservations: <?= $numNotReserved ?></div></div>
+                <div class="col-md-3"><div class="alert alert-info">Total Reservations: <?= $totalReservations ?></div></div>
+            </div>
+        </div>
+    </section>
+<!-- FAQ Start -->
+<div id="faq" class="py-5">
+    <h2 class="text-center my-5">Frequently Asked Questions (FAQ)</h2>
+
+    <div class="container scrollElement">
+        <div class="accordion">
+
+            <!-- FAQ 1 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                        Paano ako magre-report ng nawawalang gamit?
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        Kung nawalan ka ng gamit, pumunta sa Lost and Found Office at
+                        magbigay ng kumpletong detalye tungkol sa iyong item tulad ng
+                        pangalan ng gamit, petsa, oras, at lugar kung saan ito huling nakita.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                        Paano ko malalaman kung may nakitang gamit na katulad ng akin?
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        Maaari mong tingnan ang listahan ng mga found items sa system.
+                        Kung may item na kahawig ng iyong nawawalang gamit, makipag-ugnayan
+                        sa Lost and Found Office para sa beripikasyon.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                        Ano ang kailangan upang ma-claim ang nahanap na gamit?
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        Kailangang magpakita ng valid school ID at magbigay ng sapat na
+                        impormasyon upang mapatunayan na ikaw ang tunay na may-ari ng item.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- FAQ End -->
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- pag lumalaki screen nawawala yung active na naka open na navbar -->
+<script>
+  const navbarCollapse = document.getElementById('mainNavbar');
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth >= 992) {
+      navbarCollapse.classList.remove('show');
+
+    // 🔥 ADD THIS LINE
+    toggler.classList.remove('open');
+    }
+  });
+</script>
+
+/* pag pinindot yung buttons ng modal magsasara yung navbar */
+<script>
+function closeNavbar() {
+    const navbar = document.getElementById('mainNavbar');
+
+    if (navbar.classList.contains('show')) {
+        bootstrap.Collapse.getOrCreateInstance(navbar).hide();
+
+        // optional kung may custom X animation ka
+        const toggler = document.querySelector('.navbar-toggler');
+        if (toggler) {
+            toggler.classList.remove('open');
+        }
+    }
+}
+</script>
+
+/** Hero animation **/
+<script>
+window.onload = function(){
+
+    var heroTitle = document.getElementById("heroTitle");
+    heroTitle.classList.add("hero-title-anim");
+
+    var heroText = document.getElementById("heroText");
+    heroText.classList.add("hero-text-anim");
+
+    var heroBtn1 = document.getElementById("heroBtn1");
+    heroBtn1.classList.add("hero-btn1-anim");
+
+    var heroBtn2 = document.getElementById("heroBtn2");
+    heroBtn2.classList.add("hero-btn2-anim");
+
+};
+</script>
+
+<!--- Spinner -->
+<script>
+    const spinnerWrapperEl = document.querySelector('.spinner-wrapper');
+
+window.addEventListener('load', () => {
+    spinnerWrapperEl.style.opacity = '0';
+
+    setTimeout(() =>{
+        spinnerWrapperEl.style.display = 'none';
+    }, 500 );
+});  
+
+</script>
+
+
+</body>
+</html>

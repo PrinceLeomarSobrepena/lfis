@@ -1,0 +1,853 @@
+//adminCustomerCreate.php <?php
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF validation failed");
+    }
+
+    $firstName = trim($_POST['firstName']);
+    $lastName  = trim($_POST['lastName']);
+    $email     = trim($_POST['email']);
+    $contact   = trim($_POST['contact']);
+    $province  = trim($_POST['province']);
+    $city      = trim($_POST['city']);
+    $barangay  = trim($_POST['barangay']);
+    $zone      = trim($_POST['zone']);
+    $password  = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+    // ✅ SERVER-SIDE EMAIL VALIDATION
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die("Invalid email format");
+    }
+
+    // ✅ Image handling
+    $imageName = $_FILES['image']['name'] ?? '';
+    $imageTmp  = $_FILES['image']['tmp_name'] ?? '';
+    $finalImageName = 'default.jpg'; // fallback default
+
+    if (!empty($imageName)) {
+        // Optional: sanitize file name
+        $imageNameClean = preg_replace("/[^a-zA-Z0-9\.\-_]/", "", basename($imageName));
+        $finalImageName = time() . '_' . $imageNameClean;
+
+        $uploadPath = '../uploads/' . $finalImageName;
+
+        if (!move_uploaded_file($imageTmp, $uploadPath)) {
+            // If upload fails, fallback to default
+            $finalImageName = 'default.jpg';
+        }
+    }
+
+    // Insert into DB
+    $stmt = $conn->prepare("INSERT INTO customer (firstName, lastName, email, contact, province, city, barangay, zone, image, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssssss", $firstName, $lastName, $email, $contact, $province, $city, $barangay, $zone, $finalImageName, $password);
+    $stmt->execute();
+    $stmt->close();
+
+    // regenerate CSRF
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    header("Location: adminCustomerList.php");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Customer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h2>➕ Create Customer</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+        <div class="mb-3">
+            <label class="form-label">First Name</label>
+            <input type="text" name="firstName" oninput="formatNameInput(this)" class="form-control" placeholder="First Name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" name="lastName" oninput="formatNameInput(this)" class="form-control" placeholder="Last Name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Contact Number</label>
+            <input type="text" name="contact" id="contact" class="form-control" placeholder="Contact Number" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" id="email" class="form-control" placeholder="Email" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Profile Image</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+        </div>
+
+        <!--location fields-->
+        <div class="mb-3">
+            <label class="form-label">Province</label>
+            <select id="province" class="form-control" disabled required></select>
+            <input type="hidden" name="province" id="hiddenProvince">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">City</label>
+            <select id="city" class="form-control" disabled required></select>
+            <input type="hidden" name="city" id="hiddenCity">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Barangay</label>
+            <select name="barangay" id="barangay" class="form-control" required></select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Zone / Street</label>
+            <input type="text" name="zone" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create</button>
+        <a href="adminCustomerList.php" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+
+<!--JavaScript Library-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!--Full name sanitation-->
+<script>
+    function formatNameInput(input) {
+        let cleaned = input.value.replace(/[^a-zA-Z\s+]/g, '');// Remove non-letter and non-space characters
+
+        cleaned = cleaned.replace(/\b\w/g, function(char) { // Capitalize the first letter of each word
+            return char.toUpperCase();
+        });
+
+        input.value = cleaned;
+    }
+</script>
+
+<!-- ✅ EMAIL LIVE VALIDATION -->
+<script>
+const emailInput = document.getElementById('email');
+
+emailInput.addEventListener('input', function () {
+    const email = this.value.trim();
+    const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+
+    this.setCustomValidity("");
+
+    if (email === "") return;
+
+    if (!regex.test(email)) {
+        this.setCustomValidity("Please enter a valid email address.");
+        return;
+    }
+
+    fetch('check_email.php?email=' + encodeURIComponent(email))
+        .then(res => res.json())
+        .then(data => {
+            if (data.exists) {
+                this.setCustomValidity("This email is already registered.");
+            } else {
+                this.setCustomValidity("");
+            }
+        })
+        .catch(() => {
+            this.setCustomValidity("Unable to verify email.");
+        });
+});
+</script>
+
+
+<!-- ✅ CONTACT LIVE VALIDATION -->
+<!-- <script>
+const contactInput = document.getElementById('contact');
+
+contactInput.addEventListener('input', function () {
+    const contact = this.value.trim();
+
+    // Clear previous error
+    this.setCustomValidity("");
+
+    if (contact === "") return;
+
+    // Must start with 09 and exactly 11 digits
+    const regex = /^09\d{9}$/;
+
+    if (!regex.test(contact)) {
+        this.setCustomValidity("Contact number must start with 09 and contain 11 digits.");
+        return;
+    }
+
+    fetch('check_contact.php?contact=' + encodeURIComponent(contact))
+        .then(res => res.json())
+        .then(data => {
+            // Clear old error first
+            contactInput.setCustomValidity("");
+
+            if (data.exists) {
+                contactInput.setCustomValidity("This contact number is already registered.");
+            }
+        })
+        .catch(() => {
+            contactInput.setCustomValidity("Unable to verify contact number.");
+        });
+});
+</script> -->
+
+<script>
+const contactInput = document.getElementById('contact');
+
+contactInput.addEventListener('input', function () {
+    const contact = this.value.trim();
+
+    // Reset validation
+    this.setCustomValidity("");
+
+    if (contact === "") return;
+
+    // Must start with 09 and exactly 11 digits
+    const regex = /^09\d{9}$/;
+
+    if (!regex.test(contact)) {
+        this.setCustomValidity("Contact number must start with 09 and contain 11 digits.");
+        return;
+    }
+
+    // Pass current user id to ignore own contact
+    fetch('check_contact.php?contact=' + encodeURIComponent(contact))
+        .then(res => res.json())
+        .then(data => {
+            if (data.exists) {
+                this.setCustomValidity("This contact number is already registered.");
+            } else {
+                this.setCustomValidity("");
+            }
+        })
+        .catch(() => {
+            this.setCustomValidity("Unable to verify contact number.");
+        });
+});
+</script>
+
+
+<!--Location-->
+<script>
+let provinces, cities, barangays;
+
+$(document).ready(function() {
+    const defaultProvince = "Nueva Ecija";     // ✅ change this as needed
+    const defaultCity = "Cabanatuan City";     // ✅ change this as needed
+
+    $.getJSON("../location/province.json", function(data) {
+        provinces = data;
+        $("#province").append('<option value="">-- Select Province --</option>');
+        provinces.forEach(p => {
+            const selected = (p.province_name === defaultProvince) ? 'selected' : '';
+            $("#province").append(`<option value="${p.province_name}" ${selected}>${p.province_name}</option>`);
+        });
+
+         // ✅ After loop: set hiddenProvince once
+         $('#hiddenProvince').val(defaultProvince);
+
+        const provinceCode = provinces.find(p => p.province_name === defaultProvince)?.province_code;
+
+        if (provinceCode) {
+            $.getJSON("../location/city.json", function(data) {
+                cities = data.filter(c => c.province_code === provinceCode);
+                $("#city").empty().append('<option value="">-- Select City --</option>');
+                cities.forEach(c => {
+                    const selected = (c.city_name === defaultCity) ? 'selected' : '';
+                    $("#city").append(`<option value="${c.city_name}" ${selected}>${c.city_name}</option>`);
+                });
+
+                // ✅ After loop: set hiddenCity once
+                $('#hiddenCity').val(defaultCity);
+
+                const cityCode = cities.find(c => c.city_name === defaultCity)?.city_code;
+                if (cityCode) {
+                    $.getJSON("../location/barangay.json", function(data) {
+                        barangays = data.filter(b => b.city_code === cityCode);
+                        $("#barangay").empty().append('<option value="">-- Select Barangay --</option>');
+                        barangays.forEach(b => {
+                            $("#barangay").append(`<option value="${b.brgy_name}">${b.brgy_name}</option>`);
+                        });
+                    });
+                }
+            });
+        }
+    });
+
+    $("#province").on("change", function() {
+        const selectedProvince = $(this).val();
+        const provinceCode = provinces.find(p => p.province_name === selectedProvince)?.province_code;
+
+        $("#city").empty().append('<option value="">-- Select City --</option>');
+        $("#barangay").empty().append('<option value="">-- Select Barangay --</option>');
+
+        if (!provinceCode) return;
+
+        $.getJSON("../location/city.json", function(data) {
+            cities = data.filter(c => c.province_code === provinceCode);
+            cities.forEach(c => {
+                $("#city").append(`<option value="${c.city_name}">${c.city_name}</option>`);
+            });
+        });
+    });
+
+    $("#city").on("change", function() {
+        const selectedCity = $(this).val();
+        const cityCode = cities.find(c => c.city_name === selectedCity)?.city_code;
+
+        $("#barangay").empty().append('<option value="">-- Select Barangay --</option>');
+
+        if (!cityCode) return;
+
+        $.getJSON("../location/barangay.json", function(data) {
+            barangays = data.filter(b => b.city_code === cityCode);
+            barangays.forEach(b => {
+                $("#barangay").append(`<option value="${b.brgy_name}">${b.brgy_name}</option>`);
+            });
+        });
+    });
+});
+</script>
+
+</body>
+</html>  //adminCustomerDelete.php <?php
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: adminCustomerList.php");
+    exit();
+}
+
+// CSRF check
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    die("CSRF validation failed");
+}
+
+$id = intval($_POST['id']);
+
+// Step 1: Get the customer's image first
+$stmt = $conn->prepare("SELECT image FROM customer WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$customer = $result->fetch_assoc();
+$stmt->close();
+
+if ($customer) {
+    $image = $customer['image'];
+
+    // Step 2: Delete customer from DB
+    $stmt = $conn->prepare("DELETE FROM customer WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
+
+    // Step 3: Delete image file if it's not default and not used by any other customer
+    if ($image !== 'default.jpg') {
+        $check = $conn->prepare("SELECT COUNT(*) AS count FROM customer WHERE image = ?");
+        $check->bind_param("s", $image);
+        $check->execute();
+        $count = $check->get_result()->fetch_assoc()['count'];
+        $check->close();
+
+        if ($count == 0 && file_exists("../uploads/" . $image)) {
+            unlink("../uploads/" . $image);
+        }
+    }
+}
+
+// Regenerate CSRF token
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+header("Location: adminCustomerList.php");
+exit();
+?>  //adminCustomerList.php <?php
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$result = $conn->query("SELECT * FROM customer ORDER BY created_at DESC");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <h2>Customer List </h2>
+    <a href="adminCustomerCreate.php">Add Customer</a>
+
+    <table border="1" cellpadding="10">
+        <tr>
+              <th>Image</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Barangay</th>
+            <th>Zone / Streets</th>
+             <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        <?php while($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td>
+                    <?php if ($row['image']): ?>
+                        <img src="../uploads/<?= $row['image'] ?>" width="50">
+                    <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars($row['firstName']. ' ' . $row['lastName'])?></td>
+                <td><?= htmlspecialchars($row['email'])?></td>
+                <td><?= htmlspecialchars($row['contact'])?></td>
+                <td><?= htmlspecialchars($row['barangay'])?></td>
+                <td><?= htmlspecialchars($row['zone'])?></td>
+
+                <!-- Ban/Unban Button -->
+                <td>
+                    <form method="post" action="adminCustomerListBan.php" style="display:inline;"
+                        onsubmit="return confirm('<?= $row['banned'] ? 'Unban' : 'Ban' ?> this customer?');">
+
+                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+                        <button type="submit"
+                                class="btn btn-sm rounded-5 fw-bold text-white"
+                                title="<?= $row['banned'] ? 'Unban Customer' : 'Ban Customer' ?>">
+
+                            <i class="fa-solid fa-ban"
+                            style="color: <?= $row['banned'] ? '#f89d54ff' : '#8c969fff' ?>;
+                                    font-size: 25px">
+                            </i>
+                        </button>
+                    </form>
+                </td>
+                <!-- Status Ban Badge -->
+                <td>
+                    <?= $row['banned'] ? '<span class="badge bg-danger">Banned</span>' : '<span class="badge bg-success">Active</span>' ?>
+                </td>
+
+                <td>
+                    <a href="adminCustomerUpdate.php?id=<?= $row['id']?>">Edit</a>
+                    <form action="adminCustomerDelete.php" method="POST" style="display:inline;">
+                        <input type="hidden" name="id" value="<?= $row['id']?>">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']?>">
+                        <button onclick="return confirm('Delete this customer?')">delete</button>
+                    </form>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+    </table>
+</body>
+</html> //adminCustomerUpdate.php <?php
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+$id = (int)$_GET['id'];
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Fetch customer
+$stmt = $conn->prepare("SELECT * FROM customer WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$customer = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$customer) {
+    die("Customer not found.");
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF validation failed");
+    }
+
+    $firstName   = trim($_POST['firstName']);
+    $lastName    = trim($_POST['lastName']);
+    $email       = trim($_POST['email']);
+    $contact     = trim($_POST['contact']);
+    $province    = trim($_POST['province']);
+    $city        = trim($_POST['city']);
+    $barangay    = trim($_POST['barangay']);
+    $zone        = trim($_POST['zone']);
+
+    // ✅ SERVER-SIDE EMAIL VALIDATION
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die("Invalid email format");
+    }
+
+    $hasNewImage = !empty($_FILES['image']['name']);
+    $image       = $customer['image']; // default current image
+
+    if ($hasNewImage) {
+        // Generate unique filename
+        $newImageName = time() . '_' . basename($_FILES['image']['name']);
+        $tmpName = $_FILES['image']['tmp_name'];
+        $uploadPath = "../uploads/" . $newImageName;
+
+        // Move uploaded file
+        move_uploaded_file($tmpName, $uploadPath);
+
+        // Delete old image if not default and not used by other customers
+        if ($customer['image'] !== 'default.jpg') {
+            $check = $conn->prepare("SELECT COUNT(*) AS count FROM customer WHERE image = ? AND id != ?");
+            $check->bind_param("si", $customer['image'], $id);
+            $check->execute();
+            $count = $check->get_result()->fetch_assoc()['count'];
+            $check->close();
+
+            if ($count == 0 && file_exists("../uploads/" . $customer['image'])) {
+                unlink("../uploads/" . $customer['image']);
+            }
+        }
+
+        $image = $newImageName; // use the new image for update
+    }
+
+    // Update database
+    $stmt = $conn->prepare("UPDATE customer SET firstName=?, lastName=?, email=?, contact=?, province=?, city=?, barangay=?, zone=?, image=? WHERE id=?");
+    $stmt->bind_param("sssssssssi", $firstName, $lastName, $email, $contact, $province, $city, $barangay, $zone, $image, $id);
+    $stmt->execute();
+    $stmt->close();
+
+    // regenerate CSRF
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    header("Location: adminCustomerList.php");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Update Customer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>✏️ Update Customer</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+        <div class="mb-3">
+            <label class="form-label">First Name</label>
+            <input type="text" name="firstName" class="form-control" value="<?= htmlspecialchars($customer['firstName']) ?>" oninput="formatNameInput(this)" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" name="lastName" class="form-control" value="<?= htmlspecialchars($customer['lastName']) ?>" oninput="formatNameInput(this)" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" id="email" class="form-control" value="<?= htmlspecialchars($customer['email']) ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Contact Number</label>
+            <input type="text" name="contact" id="contact" class="form-control" value="<?= htmlspecialchars($customer['contact']) ?>" required>
+        </div>
+
+        <!-- location fields -->
+        <div class="mb-3">
+            <label class="form-label">Province</label>
+            <select id="province" class="form-control" disabled required></select>
+            <input type="hidden" name="province" id="hiddenProvince">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">City</label>
+            <select id="city" class="form-control" disabled required></select>
+            <input type="hidden" name="city" id="hiddenCity">
+        </div>
+
+        <div class="mb-3">
+            <label>Barangay</label>
+            <select name="barangay" id="barangay" class="form-control" required></select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Zone / Streets</label>
+            <input type="text" name="zone" class="form-control" value="<?= htmlspecialchars($customer['zone']) ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Profile Image</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+            <?php if (!empty($customer['image'])): ?>
+                <img src="../uploads/<?= htmlspecialchars($customer['image']) ?>" width="100" class="mt-2">
+            <?php endif; ?>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="adminCustomerList.php" class="btn btn-secondary">Back</a>
+    </form>
+
+    <!--JavaScript Library-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<!--Full name sanitation-->
+<script>
+    function formatNameInput(input) {
+        let cleaned = input.value.replace(/[^a-zA-Z\s+]/g, '');// Remove non-letter and non-space characters
+
+        cleaned = cleaned.replace(/\b\w/g, function(char) { // Capitalize the first letter of each word
+            return char.toUpperCase();
+        });
+
+        input.value = cleaned;
+    }
+</script>
+
+<!-- ✅ EMAIL LIVE VALIDATION -->
+<!-- <script>
+const emailInput = document.getElementById('email');
+
+emailInput.addEventListener('input', function () {
+    const email = this.value.trim();
+    const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+
+    this.setCustomValidity("");
+
+    if (email === "") return;
+
+    if (!regex.test(email)) {
+        this.setCustomValidity("Please enter a valid email address.");
+        return;
+    }
+
+    fetch('check_email.php?email=' + encodeURIComponent(email))
+        .then(res => res.json())
+        .then(data => {
+            if (data.exists) {
+                this.setCustomValidity("This email is already registered.");
+            } else {
+                this.setCustomValidity("");
+            }
+        })
+        .catch(() => {
+            this.setCustomValidity("Unable to verify email.");
+        });
+});
+</script> -->
+
+<script>
+const emailInput = document.getElementById('email');
+const currentUserId = <?= $id ?>; // current customer's ID from PHP
+
+emailInput.addEventListener('input', function () {
+    const email = this.value.trim();
+    const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+
+    this.setCustomValidity("");
+
+    if (email === "") return;
+
+    if (!regex.test(email)) {
+        this.setCustomValidity("Please enter a valid email address.");
+        return;
+    }
+
+    fetch('check_email.php?email=' + encodeURIComponent(email)+ '&id=' + currentUserId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.exists) {
+                this.setCustomValidity("This email is already registered.");
+            } else {
+                this.setCustomValidity("");
+            }
+        })
+        .catch(() => {
+            this.setCustomValidity("Unable to verify email.");
+        });
+});
+</script>
+
+
+
+
+<!-- ✅ CONTACT LIVE VALIDATION -->
+<!-- <script>
+const contactInput = document.getElementById('contact');
+const currentUserId = <?= $id ?>; // the current customer's ID from PHP
+
+contactInput.addEventListener('input', function () {
+    const contact = this.value.trim();
+
+    // Clear previous error
+    this.setCustomValidity("");
+
+    if (contact === "") return;
+
+    // Must start with 09 and exactly 11 digits
+    const regex = /^09\d{9}$/;
+
+    if (!regex.test(contact)) {
+        this.setCustomValidity("Contact number must start with 09 and contain 11 digits.");
+        return;
+    }
+
+    fetch('check_contact.php?contact=' + encodeURIComponent(contact)  + '&id=' + currentUserId)
+        .then(res => res.json())
+        .then(data => {
+            // Clear old error first
+            contactInput.setCustomValidity("");
+
+            if (data.exists) {
+                contactInput.setCustomValidity("This contact number is already registered.");
+            }
+        })
+        .catch(() => {
+            contactInput.setCustomValidity("Unable to verify contact number.");
+        });
+});
+</script> -->
+
+
+<script>
+const contactInput = document.getElementById('contact');
+const currentUserId = <?= $id ?>; // current customer's ID from PHP
+
+contactInput.addEventListener('input', function () {
+    const contact = this.value.trim();
+
+    // Clear previous error
+    this.setCustomValidity("");
+
+    if (contact === "") return;
+
+    // Must start with 09 and exactly 11 digits
+    const regex = /^09\d{9}$/;
+
+    if (!regex.test(contact)) {
+        this.setCustomValidity("Contact number must start with 09 and contain 11 digits.");
+        return;
+    }
+
+    fetch('check_contact.php?contact=' + encodeURIComponent(contact) + '&id=' + currentUserId)
+        .then(res => res.json())
+        .then(data => {
+            // Clear old error first
+            // contactInput.setCustomValidity("");
+
+            if (data.exists) {
+                contactInput.setCustomValidity("This contact number is already registered.");
+            } else {
+                this.setCustomValidity("");
+            }
+        })
+        .catch(() => {
+            contactInput.setCustomValidity("Unable to verify contact number.");
+        });
+});
+</script>
+
+
+
+
+
+<!--Location-->
+<script>
+let provinces, cities, barangays;
+
+// VALUES FROM DATABASE (ETO ANG IMPORTANTE)
+const defaultProvince = "<?= htmlspecialchars($customer['province']) ?>";
+const defaultCity = "<?= htmlspecialchars($customer['city']) ?>";
+const defaultBarangay = "<?= htmlspecialchars($customer['barangay']) ?>";
+
+$(document).ready(function () {
+
+    $('#hiddenProvince').val(defaultProvince);
+    $('#hiddenCity').val(defaultCity);
+
+    // Load provinces
+    $.getJSON("../location/province.json", function (data) {
+        provinces = data;
+
+        provinces.forEach(p => {
+            const selected = p.province_name === defaultProvince ? 'selected' : '';
+            $("#province").append(`<option ${selected}>${p.province_name}</option>`);
+        });
+
+        const provinceCode = provinces.find(
+            p => p.province_name === defaultProvince
+        )?.province_code;
+
+        // Load cities
+        $.getJSON("../location/city.json", function (data) {
+            cities = data.filter(c => c.province_code === provinceCode);
+
+            cities.forEach(c => {
+                const selected = c.city_name === defaultCity ? 'selected' : '';
+                $("#city").append(`<option ${selected}>${c.city_name}</option>`);
+            });
+
+            const cityCode = cities.find(
+                c => c.city_name === defaultCity
+            )?.city_code;
+
+            // Load barangays + AUTO SELECT
+            $.getJSON("../location/barangay.json", function (data) {
+                barangays = data.filter(b => b.city_code === cityCode);
+
+                $("#barangay").append('<option value="">-- Select Barangay --</option>');
+
+                barangays.forEach(b => {
+                    const selected = b.brgy_name === defaultBarangay ? 'selected' : '';
+                    $("#barangay").append(
+                        `<option value="${b.brgy_name}" ${selected}>${b.brgy_name}</option>`
+                    );
+                });
+            });
+        });
+    });
+});
+</script>
+</div>
+</body>
+</html>  wag ka mag dadagdag uutusan kita mamaya
+
+
+diba gumagawa ako ng lost and found system system php yung nauanag code yan ginagawa ni admin pwedi mo ba akong tulungan sa crud naman ng lost at found na 
+gamit bigay mo code gaya sa naunag code na binigay ko full

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Student Lost &amp; Found</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root {
+      --navy: #2E7D53;
+      --navy-deep: #1F5D3D;
+      --cream: #F4F4F3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--cream);
+      font-family: 'Inter', sans-serif;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    /* =========================
+       NAVBAR
+    ========================= */
+
+    .lf-navbar {
+      background: var(--navy);
+      padding: 16px 0;
+    }
+
+    .lf-navbar-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      position: relative;
+    }
+
+    /* Brand */
+
+    .lf-navbar-brand {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 19px;
+      color: var(--cream);
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+
+      border-radius: 50%;
+      border: 1.5px solid var(--cream);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+    }
+
+    .brand-mark svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--cream);
+    }
+
+    /* Mobile Toggle */
+
+    .lf-nav-toggle {
+      display: none;
+
+      background: transparent;
+      border: 1px solid rgba(250, 246, 236, 0.3);
+      border-radius: 4px;
+
+      width: 38px;
+      height: 34px;
+
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+    }
+
+    .lf-nav-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--cream);
+    }
+
+    /* Navigation Links */
+
+    .lf-nav-links {
+      list-style: none;
+
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      gap: 28px;
+
+      margin: 0;
+      padding: 0;
+    }
+
+    .lf-nav-link {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+
+      color: #CFE6D8;
+
+      padding: 4px 0;
+
+      border-bottom: 1.5px solid transparent;
+
+      transition:
+        color 0.15s ease,
+        border-color 0.15s ease;
+    }
+
+    .lf-nav-link:hover {
+      color: var(--cream);
+    }
+
+    .lf-nav-link.active {
+      color: var(--cream);
+      border-bottom-color: var(--cream);
+    }
+
+    /* =========================
+       MOBILE NAVBAR
+    ========================= */
+
+    @media (max-width: 720px) {
+
+      .lf-navbar-inner {
+        flex-wrap: wrap;
+      }
+
+      .lf-nav-toggle {
+        display: flex;
+      }
+
+      .lf-nav-links {
+        display: none;
+
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 14px;
+
+        width: 100%;
+        margin-top: 18px;
+      }
+
+      .lf-nav-links.is-open {
+        display: flex;
+      }
+    }
+
+    /* Smaller phones */
+
+    @media (max-width: 400px) {
+
+      .lf-navbar {
+        padding: 14px 0;
+      }
+
+      .lf-navbar-inner {
+        padding: 0 18px;
+      }
+
+      .lf-navbar-brand {
+        font-size: 17px;
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================
+       NAVBAR
+  ========================= -->
+
+  <nav class="lf-navbar">
+
+    <div class="lf-navbar-inner">
+
+      <!-- Brand -->
+      <a class="lf-navbar-brand" href="index.html">
+
+        <span class="brand-mark">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke-width="1.6"
+          >
+            <path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z"/>
+          </svg>
+        </span>
+
+        Lost &amp; Found
+
+      </a>
+
+
+      <!-- Mobile Menu Button -->
+      <button
+        class="lf-nav-toggle"
+        id="navToggle"
+        type="button"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+      >
+
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M4 7h16"/>
+          <path d="M4 12h16"/>
+          <path d="M4 17h16"/>
+        </svg>
+
+      </button>
+
+
+      <!-- Navigation Links -->
+      <ul class="lf-nav-links" id="navMenu">
+
+        <li>
+          <a
+            class="lf-nav-link active"
+            href="index.html"
+          >
+            Home
+          </a>
+        </li>
+
+        <li>
+          <a
+            class="lf-nav-link"
+            href="lost-items.html"
+          >
+            Lost items
+          </a>
+        </li>
+
+        <li>
+          <a
+            class="lf-nav-link"
+            href="found-items.html"
+          >
+            Found items
+          </a>
+        </li>
+
+        <li>
+          <a
+            class="lf-nav-link"
+            href="claim-process.html"
+          >
+            Claim
+          </a>
+        </li>
+
+        <li>
+          <a
+            class="lf-nav-link"
+            href="contact.html"
+          >
+            Contact
+          </a>
+        </li>
+
+      </ul>
+
+    </div>
+
+  </nav>
+
+
+  <!-- =========================
+       JAVASCRIPT
+  ========================= -->
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const menu = document.getElementById('navMenu');
+
+    toggle.addEventListener('click', function () {
+
+      const isOpen = menu.classList.toggle('is-open');
+
+      toggle.setAttribute(
+        'aria-expanded',
+        isOpen
+      );
+
+    });
+  </script>
+
+</body>
+</html>

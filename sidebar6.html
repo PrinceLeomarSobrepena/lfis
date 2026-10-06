@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Nunito', Arial, sans-serif;
+    overflow-x:hidden;
+    background:#f5f6fa;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+    position:fixed;
+    top:15px;
+    left:15px;
+    bottom:15px;
+    width:250px;
+    background: white;
+    border:1px solid #dee2e6;
+    border-radius:12px;
+    padding:20px 15px;
+    display:flex;
+    flex-direction:column;
+    transition: transform 0.7s ease-in-out;
+    z-index:1050;
+}
+
+.sidebar hr{
+    border-color:#E7ECE9;
+    margin:0 0 14px;
+    opacity:1;
+}
+
+.sidebar .nav-section-label{
+    font-size:10.5px;
+    font-weight:700;
+    color: #7C8A85;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    padding:6px 15px 8px;
+}
+
+.sidebar a{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 14px;
+    margin-bottom:4px;
+    border-radius:10px;
+    text-decoration:none;
+    color:#4B5A54;
+    font-weight:600;
+    font-size:14px;
+    position:relative;
+    transition:.2s ease;
+}
+
+.sidebar a i{
+    font-size:16px;
+    width:18px;
+    text-align:center;
+    color:#8CA298;
+    transition:.2s ease;
+}
+
+.sidebar a:hover{
+    background: #E8F7EF;
+    color: #198754;
+}
+
+.sidebar a:hover i{
+    color: #198754;
+}
+
+.sidebar a.active{
+    background:linear-gradient(135deg, #198754, #147a49);
+    color:#fff;
+    box-shadow:0 6px 14px rgba(25,135,84,0.25);
+}
+
+.sidebar a.active i{
+    color:#fff;
+}
+
+.logout-btn{
+    margin-top:auto;
+    border:1px solid #ddd;
+}
+
+.logout-btn:hover{
+    background:#FCEAED !important;
+    color: #E1596B !important;
+    border: 1px solid #E1596B;
+}
+
+.logout-btn:hover i{
+    color: #E1596B !important;
+}
+
+/* =============== NAVBAR TOP =============== */
+.navbar-top {
+    position: fixed;
+    top: 0;
+    left: 290px;
+    right: 15px;
+    height: 70px;
+    background: inherit;
+    border-radius: 0 0 12px 12px;
+    z-index: 1010;
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar-custom{
+    position: sticky;
+    top:15px;
+    margin-top:15px;
+    margin-left:290px;
+    margin-right:15px;
+    background:#fff;
+    border:1px solid #dee2e6;
+    border-radius:12px;
+    padding:16px 25px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:1020;
+}
+
+.navbar-title{
+    font-size:18px;
+    font-weight: 900;
+    margin:0;
+}
+
+.navbar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.navbar-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.icon{
+    font-size:20px;
+    color:#6c757d;
+    cursor:pointer;
+}
+
+.profile-img{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid #ddd;
+}
+
+/* ================= OVERLAY ================= */
+
+#overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.3);
+    backdrop-filter:blur(2px);
+    opacity:0;
+    visibility:hidden;
+    transition:.3s;
+    z-index:1040;
+}
+
+#overlay.show{
+    opacity:1;
+    visibility:visible;
+}
+
+.btn-close-outside{
+    display:none;
+}
+
+.menu-toggle-btn{
+    display:none;
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.main-content{
+    margin-left:290px;
+    margin-right:15px;
+    margin-top:15px;
+    padding-bottom:60px;
+}
+
+.page-heading{
+    font-weight:800;
+    font-size:21px;
+    margin-bottom:2px;
+    color: #0F1B2D;
+}
+
+.page-subheading{
+    font-size:13px;
+    color: #7C8A85;
+    font-weight:600;
+}
+
+/* ====================== CALENDAR TOOLBAR ===================== */
+
+.cal-toolbar{
+    background:#fff;
+    border:1px solid #E7ECE9;
+    border-radius:14px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    box-shadow:0 4px 20px rgba(20,60,40,0.04);
+    margin-bottom:16px;
+}
+
+.cal-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.cal-nav-btn{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    border:1px solid #E7ECE9;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#4B5A54;
+    cursor:pointer;
+}
+
+.cal-nav-btn:hover{background:#f5f6fa;}
+
+.cal-month-title{
+    font-weight:800;
+    font-size:16px;
+    color:#0F1B2D;
+    min-width:150px;
+    text-align:center;
+}
+
+.btn-today{
+    border:1px solid #E7ECE9;
+    background:#fff;
+    color:#4B5A54;
+    font-weight:700;
+    font-size:12.5px;
+    padding:8px 16px;
+    border-radius:9px;
+}
+.btn-today:hover{background:#f5f6fa;}
+
+.view-switch{
+    display:flex;
+    background:#f5f6fa;
+    border-radius:9px;
+    padding:3px;
+    gap:2px;
+}
+
+.view-switch-btn{
+    padding:7px 14px;
+    border-radius:7px;
+    font-size:12px;
+    font-weight:700;
+    color:#7C8A85;
+    cursor:pointer;
+}
+
+.view-switch-btn.active{
+    background:#fff;
+    color:#0F1B2D;
+    box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+
+.btn-new-event{
+    background:linear-gradient(135deg, #198754, #147a49);
+    color:#fff;
+    border:none;
+    padding:9px 18px;
+    border-radius:9px;
+    font-weight:700;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    white-space:nowrap;
+}
+
+/* ====================== CALENDAR GRID ===================== */
+
+.cal-layout{
+    display:grid;
+    grid-template-columns:1fr 300px;
+    gap:16px;
+    align-items:start;
+}
+
+.cal-card{
+    background:#fff;
+    border:1px solid #E7ECE9;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 4px 20px rgba(20,60,40,0.04);
+}
+
+.cal-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    background:#FAFBFA;
+    border-bottom:1px solid #E7ECE9;
+}
+
+.cal-weekdays div{
+    padding:12px 8px;
+    text-align:center;
+    font-size:11px;
+    font-weight:800;
+    color:#7C8A85;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+
+.cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+}
+
+.cal-cell{
+    min-height:100px;
+    border-right:1px solid #F0F2F1;
+    border-bottom:1px solid #F0F2F1;
+    padding:8px;
+    position:relative;
+}
+
+.cal-cell:nth-child(7n){
+    border-right:none;
+}
+
+.cal-cell.other-month{
+    background:#FAFBFA;
+}
+
+.cal-cell.other-month .cal-daynum{
+    color:#C7CFCB;
+}
+
+.cal-daynum{
+    font-size:12.5px;
+    font-weight:800;
+    color:#4B5A54;
+    margin-bottom:6px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+}
+
+.cal-cell.today .cal-daynum{
+    background:#198754;
+    color:#fff;
+}
+
+.cal-event{
+    font-size:10.5px;
+    font-weight:700;
+    padding:3px 7px;
+    border-radius:6px;
+    margin-bottom:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.cal-event .dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+
+.ev-pickup{background:#E8F7EF;color:#198754;}
+.ev-pickup .dot{background:#198754;}
+
+.ev-audit{background:#EAF1FF;color:#3366CC;}
+.ev-audit .dot{background:#3366CC;}
+
+.ev-deadline{background:#FCEAED;color:#E1596B;}
+.ev-deadline .dot{background:#E1596B;}
+
+.ev-meeting{background:#FFF4E5;color:#B8860B;}
+.ev-meeting .dot{background:#B8860B;}
+
+.cal-more{
+    font-size:10px;
+    font-weight:700;
+    color:#7C8A85;
+    margin-top:2px;
+}
+
+/* ====================== SIDE PANEL ===================== */
+
+.side-card{
+    background:#fff;
+    border:1px solid #E7ECE9;
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 4px 20px rgba(20,60,40,0.04);
+    margin-bottom:16px;
+}
+
+.side-card h6{
+    font-weight:800;
+    font-size:13.5px;
+    margin-bottom:14px;
+    color:#0F1B2D;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:12.5px;
+    font-weight:600;
+    color:#4B5A54;
+    margin-bottom:10px;
+}
+
+.legend-item:last-child{margin-bottom:0;}
+
+.legend-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+
+.upcoming-item{
+    display:flex;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid #F0F2F1;
+}
+
+.upcoming-item:last-child{border-bottom:none;padding-bottom:0;}
+
+.upcoming-date{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:#F3FBF7;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+.upcoming-date .d{
+    font-weight:900;
+    font-size:14px;
+    color:#198754;
+    line-height:1;
+}
+
+.upcoming-date .m{
+    font-size:8.5px;
+    font-weight:800;
+    color:#198754;
+    text-transform:uppercase;
+}
+
+.upcoming-info .t{
+    font-weight:800;
+    font-size:12.5px;
+    color:#0F1B2D;
+    margin-bottom:2px;
+}
+
+.upcoming-info .s{
+    font-size:11px;
+    color:#7C8A85;
+    font-weight:600;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:992px){
+
+    .sidebar{
+        top:0px;
+        left:0px;
+        bottom:0px;
+        width:300px;
+        border-radius:0;
+        transform:translateX(-200%);
+    }
+
+    .sidebar.show{
+        transform:translateX(0);
+    }
+
+    .sidebar .btn-close-outside {
+        display: none;
+    }
+
+    .navbar-top{
+        display: none;
+    }
+
+    .navbar-custom{
+        margin:0;
+        border-radius:0;
+        top:0;
+        border-left:none;
+        border-right:none;
+    }
+
+    .main-content{
+        margin-left:15px;
+    }
+
+    .menu-toggle-btn{
+        display:block;
+    }
+
+    .btn-close-outside{
+        position:absolute;
+        top:10px;
+        right:-50px;
+        width:40px;
+        height:40px;
+        border-radius:50%;
+        background:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show .btn-close-outside{
+        display:flex;
+    }
+
+    .cal-layout{
+        grid-template-columns:1fr;
+    }
+
+    .cal-toolbar{
+        justify-content:center;
+        text-align:center;
+    }
+
+    .cal-cell{
+        min-height:70px;
+        padding:5px;
+    }
+
+    .cal-event{
+        font-size:9px;
+        padding:2px 5px;
+    }
+
+    .cal-weekdays div{
+        font-size:9.5px;
+        padding:8px 3px;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="overlay"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar shadow-sm" id="sidebar">
+    <div class="btn-close-outside" onclick="toggleSidebar()">
+        <i class="fas fa-times" style="margin-left: -1px;"></i>
+    </div>
+
+    <hr>
+
+    <div class="nav-section-label">Main</div>
+    <a href="#"> <i class="bi bi-speedometer2"></i> Dashboard </a>
+    <a href="#"> <i class="bi bi-people"></i> Staff </a>
+
+    <a href="#"> <i class="bi bi-plus-lg"></i> Create </a>
+    <a href="#"> <i class="bi bi-journal-text"></i> List </a>
+    <a href="#"> <i class="bi bi-layers"></i> Match Items </a>
+    <a href="#"> <i class="bi bi-search"></i> Found Items </a>
+    <a href="#"> <i class="bi bi-clipboard-data"></i> Audit Trail </a>
+    <a href="#"> <i class="bi bi-graph-up-arrow"></i> Statistic </a>
+    <div class="nav-section-label">Other</div>
+    <a href="#" class="active"> <i class="bi bi-calendar-event"></i> Calendar </a>
+    <a href="#"> <i class="bi bi-lock" style="display: inline-block; transform: scaleX(1.4);"></i> Change Password </a>
+    <a href="#" class="logout-btn"> <i class="bi bi-box-arrow-right"></i> Logout </a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar-custom shadow-sm">
+    <div class="navbar-left">
+        <img src="https://picsum.photos/200" class="profile-img d-lg-none">
+        <h5 class="navbar-title text-success" style="font-family:'Nunito', Arial, sans-serif;">
+            Calendar
+        </h5>
+    </div>
+
+    <div class="navbar-right">
+        <i class="fa-solid fa-bars icon menu-toggle-btn" onclick="toggleSidebar()"></i>
+    </div>
+</nav>
+
+<!-- TOP NAVBAR -->
+<div class="navbar-top"></div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="mt-4 mb-3">
+        <div class="page-heading">Calendar</div>
+        <div class="page-subheading">Pickup schedules, audit dates, and deadlines in one view.</div>
+    </div>
+
+    <!-- CALENDAR TOOLBAR -->
+    <div class="cal-toolbar">
+        <div class="cal-nav">
+            <div class="cal-nav-btn"><i class="bi bi-chevron-left"></i></div>
+            <div class="cal-month-title">August 2026</div>
+            <div class="cal-nav-btn"><i class="bi bi-chevron-right"></i></div>
+            <button class="btn-today">Today</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="view-switch">
+                <div class="view-switch-btn active">Month</div>
+                <div class="view-switch-btn">Week</div>
+                <div class="view-switch-btn">Day</div>
+            </div>
+            <button class="btn-new-event"><i class="bi bi-plus-lg"></i> New Event</button>
+        </div>
+    </div>
+
+    <div class="cal-layout">
+
+        <!-- CALENDAR GRID -->
+        <div class="cal-card">
+            <div class="cal-weekdays">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+
+            <div class="cal-grid">
+
+                <!-- Week 1 -->
+                <div class="cal-cell other-month"><div class="cal-daynum">26</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">27</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">28</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">29</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">30</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">31</div></div>
+                <div class="cal-cell"><div class="cal-daynum">1</div></div>
+
+                <!-- Week 2 -->
+                <div class="cal-cell"><div class="cal-daynum">2</div></div>
+                <div class="cal-cell"><div class="cal-daynum">3</div></div>
+                <div class="cal-cell">
+                    <div class="cal-daynum">4</div>
+                    <div class="cal-event ev-audit"><span class="dot"></span>Audit Trail Review</div>
+                </div>
+                <div class="cal-cell"><div class="cal-daynum">5</div></div>
+                <div class="cal-cell"><div class="cal-daynum">6</div></div>
+                <div class="cal-cell"><div class="cal-daynum">7</div></div>
+                <div class="cal-cell"><div class="cal-daynum">8</div></div>
+
+                <!-- Week 3 -->
+                <div class="cal-cell"><div class="cal-daynum">9</div></div>
+                <div class="cal-cell"><div class="cal-daynum">10</div></div>
+                <div class="cal-cell"><div class="cal-daynum">11</div></div>
+                <div class="cal-cell">
+                    <div class="cal-daynum">12</div>
+                    <div class="cal-event ev-deadline"><span class="dot"></span>Unclaimed Item Deadline</div>
+                </div>
+                <div class="cal-cell"><div class="cal-daynum">13</div></div>
+                <div class="cal-cell"><div class="cal-daynum">14</div></div>
+                <div class="cal-cell"><div class="cal-daynum">15</div></div>
+
+                <!-- Week 4 -->
+                <div class="cal-cell"><div class="cal-daynum">16</div></div>
+                <div class="cal-cell today">
+                    <div class="cal-daynum">17</div>
+                    <div class="cal-event ev-pickup"><span class="dot"></span>Pickup - Wallet #142</div>
+                    <div class="cal-event ev-meeting"><span class="dot"></span>Staff Briefing</div>
+                </div>
+                <div class="cal-cell">
+                    <div class="cal-daynum">18</div>
+                    <div class="cal-event ev-pickup"><span class="dot"></span>Pickup - Keys #140</div>
+                </div>
+                <div class="cal-cell"><div class="cal-daynum">19</div></div>
+                <div class="cal-cell">
+                    <div class="cal-daynum">20</div>
+                    <div class="cal-event ev-pickup"><span class="dot"></span>Pickup - Backpack</div>
+                    <div class="cal-event ev-audit"><span class="dot"></span>Monthly Count</div>
+                    <div class="cal-more">+1 more</div>
+                </div>
+                <div class="cal-cell"><div class="cal-daynum">21</div></div>
+                <div class="cal-cell"><div class="cal-daynum">22</div></div>
+
+                <!-- Week 5 -->
+                <div class="cal-cell"><div class="cal-daynum">23</div></div>
+                <div class="cal-cell"><div class="cal-daynum">24</div></div>
+                <div class="cal-cell"><div class="cal-daynum">25</div></div>
+                <div class="cal-cell"><div class="cal-daynum">26</div></div>
+                <div class="cal-cell">
+                    <div class="cal-daynum">27</div>
+                    <div class="cal-event ev-deadline"><span class="dot"></span>Disposal Review</div>
+                </div>
+                <div class="cal-cell"><div class="cal-daynum">28</div></div>
+                <div class="cal-cell"><div class="cal-daynum">29</div></div>
+
+                <!-- Week 6 -->
+                <div class="cal-cell"><div class="cal-daynum">30</div></div>
+                <div class="cal-cell"><div class="cal-daynum">31</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">1</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">2</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">3</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">4</div></div>
+                <div class="cal-cell other-month"><div class="cal-daynum">5</div></div>
+
+            </div>
+        </div>
+
+        <!-- SIDE PANEL -->
+        <div>
+            <div class="side-card">
+                <h6>Legend</h6>
+                <div class="legend-item"><span class="legend-dot" style="background:#198754;"></span> Item Pickup</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#3366CC;"></span> Audit / Inventory</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#E1596B;"></span> Deadline</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#B8860B;"></span> Staff Meeting</div>
+            </div>
+
+            <div class="side-card">
+                <h6>Upcoming</h6>
+
+                <div class="upcoming-item">
+                    <div class="upcoming-date"><span class="d">17</span><span class="m">Aug</span></div>
+                    <div class="upcoming-info">
+                        <div class="t">Pickup - Wallet #142</div>
+                        <div class="s">Claimant verified, 2:00 PM</div>
+                    </div>
+                </div>
+
+                <div class="upcoming-item">
+                    <div class="upcoming-date"><span class="d">18</span><span class="m">Aug</span></div>
+                    <div class="upcoming-info">
+                        <div class="t">Pickup - Keys #140</div>
+                        <div class="s">Office counter, 10:00 AM</div>
+                    </div>
+                </div>
+
+                <div class="upcoming-item">
+                    <div class="upcoming-date"><span class="d">20</span><span class="m">Aug</span></div>
+                    <div class="upcoming-info">
+                        <div class="t">Monthly Item Count</div>
+                        <div class="s">Storage room inventory</div>
+                    </div>
+                </div>
+
+                <div class="upcoming-item">
+                    <div class="upcoming-date"><span class="d">27</span><span class="m">Aug</span></div>
+                    <div class="upcoming-info">
+                        <div class="t">Disposal Review</div>
+                        <div class="s">Items unclaimed 60+ days</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleSidebar(){
+    document.getElementById("sidebar")
+    .classList.toggle("show");
+
+    document.getElementById("overlay")
+    .classList.toggle("show");
+}
+
+document.getElementById("overlay")
+.addEventListener("click", function(){
+    document.getElementById("sidebar")
+    .classList.remove("show");
+
+    this.classList.remove("show");
+});
+
+window.addEventListener("resize", ()=>{
+
+    if(window.innerWidth >= 992){
+        document.getElementById("sidebar")
+        .classList.remove("show");
+
+        document.getElementById("overlay")
+        .classList.remove("show");
+    }
+});
+
+/* VIEW SWITCH (visual only) */
+document.querySelectorAll(".view-switch-btn").forEach(btn=>{
+    btn.addEventListener("click", function(){
+        document.querySelectorAll(".view-switch-btn").forEach(b=>b.classList.remove("active"));
+        this.classList.add("active");
+    });
+});
+
+</script>
+
+</body>
+</html>

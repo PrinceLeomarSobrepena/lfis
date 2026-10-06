@@ -1,0 +1,1243 @@
+//adminLostFoundList.php <?php
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$result = $conn->query("SELECT * FROM lost_found ORDER BY created_at DESC");
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lost & Found List</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, sans-serif;
+    overflow-x:hidden;
+    /* background:#f5f6fa; */
+}
+
+        /* Prevent text from going down */
+    table {
+        white-space: nowrap;
+    }
+
+    /* Optional smoother scroll */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .bg-purple{
+    background-color: #6f42c1;
+    color: white;
+}
+.icon-link{
+    font-size: 21px;
+    color: #6c757d;
+    cursor: pointer;
+    text-decoration: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.icon-link:hover{
+    color: #4c5257;
+}
+</style>
+<body>
+
+    <div class="container py-5">
+        <h2>Lost & Found</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="fs-5 text-muted mb-0">All List</p>
+
+            <div class="d-flex align-items-center gap-3">
+                <a href="adminLostFoundMatches.php" class="icon-link ms-2">
+                <i class="fa-solid fa-swatchbook"></i>
+                </a>
+
+                <a href="adminLostFoundMatches.php" class="icon-link">
+                    <i class="fa-solid fa-list-ul"></i>
+                </a>
+
+                <a href="adminLostFoundCreate.php" class="btn  btn-primary">
+                    Add Item
+                </a>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle" ><!---table-hover table-bordered        style="border: 1px solid #ced4da;"-->
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Image</th>
+                        <th>Status</th>
+                        <th>Category</th>
+                        <th>Item Details</th>
+                        <th>Reported Location</th>
+                        <th>Claim Status</th>
+                        <th>Created At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody class="text-center">
+                <?php while($row = $result->fetch_assoc()): ?>
+
+                <?php
+                    $itemDetails = '-';
+
+                    if ($row['category'] === 'Cash') {
+
+                        $itemDetails =
+                            '₱ ' . number_format($row['cash_amount'], 2);
+                    }
+
+                    elseif ($row['category'] === 'Gadget') {
+
+                        $itemDetails =
+                            'Type: ' . ($row['gadget_type'] ?? '-') . '<br>' .
+                            'Brand: ' . ($row['gadget_brand'] ?? '-') . '<br>' .
+                            'Color: ' . ($row['gadget_color'] ?? '-') . '<br>' .
+                            'Features: ' . ($row['gadget_features'] ?? '-');
+                    }
+
+                    elseif ($row['category'] === 'Document') {
+
+                        $itemDetails =
+                            'Type: ' . ($row['document_type'] ?? '-') . '<br>' .
+                            'Name: ' . ($row['document_name'] ?? '-');
+                    }
+
+                    elseif ($row['category'] === 'Other') {
+
+                        $itemDetails =
+                            'Item: ' . ($row['other_description'] ?? '-');
+                    }
+                ?>
+
+                <tr>
+
+                    <td>
+                        <img src="../uploads/<?= $row['image'] ?>" width="60">
+                    </td>
+
+                    <td><?= $row['status'] ?></td>
+
+                    <td><?= $row['category'] ?></td>
+
+                    <td><?= $itemDetails ?></td>
+
+                    <td><?= $row['reported_location'] ?></td>
+
+                    <!-- <td>
+                        <?= $row['is_claimed']
+                            ? '<span class="badge bg-success">Claimed</span>'
+                            : '<span class="badge bg-secondary">Unclaimed</span>'
+                        ?>
+                    </td> -->
+
+                    <!--<td>
+                            <?= $row['is_claimed'] ? '<span class="badge bg-success">Claimed</span>' : 'N/A' ?>           <span class="badge bg-danger">Unclaimed</span> 
+                        </td>-->
+                    <td>
+                        <?php
+
+                        if($row['is_claimed']){
+                            echo '<span class="badge bg-success rounded-5"> Claimed </span>';
+                        }
+
+                        elseif($row['is_resolved']){
+                            echo '<span class="badge bg-purple rounded-5"> Resolved </span>';
+                        }
+
+                        else{
+                            echo '<span class="badge bg-secondary rounded-5"  style="font-size: 14px; "> Pending </span>';
+                        }
+
+                        ?>
+                    </td>
+
+
+                    <td>
+                        <?= date('M d, Y', strtotime($row['created_at'])) ?>
+                        <br>
+                        <?= date('h:i A', strtotime($row['created_at'])) ?>
+                    </td>
+
+                    <td>
+                        <!-- <a href="adminLostFoundUpdate.php?id=<?= $row['id'] ?>"
+                            class="btn btn-warning btn-sm">
+                            <i class="fa-solid fa-pen-to-square text-white"></i>
+                        </a> -->
+                        <?php if (!$row['is_claimed'] && !$row['is_resolved']): ?>
+                            <a href="adminLostFoundUpdate.php?id=<?= $row['id'] ?>"
+                                class="btn btn-warning btn-sm">
+                                <i class="fa-solid fa-pen-to-square text-black" style="font-size: 18px"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <!-- <?php if ($row['status'] === 'Found' && !$row['is_claimed']): ?>
+                            <a href="adminLostFoundClaim.php?id=<?= $row['id'] ?>"
+                                class="btn btn-success btn-sm">
+                                <i class="fa-solid fa-hand-point-down"></i>
+                            </a>
+                        <?php endif; ?> -->
+                        <?php if ($row['status'] === 'Found' && !$row['is_claimed'] && !$row['is_resolved']): ?>
+                            <a href="adminLostFoundClaim.php?id=<?= $row['id'] ?>"
+                                class="btn btn-success btn-sm">
+                                <!-- <i class="fa-solid fa-hand-point-down"></i> -->
+                                <i class="fa-solid fa-hand-pointer" style="font-size: 18px"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if ($row['is_claimed']): ?>
+                            <a href="adminLostFoundView.php?id=<?= $row['id'] ?>"
+                                class="btn btn-primary btn-sm">
+                                <i class="fa-solid fa-eye" style="color: white"></i>
+                            </a>
+                        <?php endif; ?>
+
+                        <form method="POST" action="adminLostFoundDelete.php" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Delete?')"> <i class="fa-solid fa-trash-can" style="font-size: 18px"></i></button><!-- delete -->
+                        </form>
+                    </td>
+
+                
+                </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html> //adminLostFoundCreate.php <?php
+
+include '../middleware/adminMiddleware.php';
+include '../config/db.php';
+
+// CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// HANDLE POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF validation failed");
+    }
+
+    $location = trim($_POST['reported_location']);
+    $category = trim($_POST['category']);
+    $status   = trim($_POST['status']);
+    $email    = trim($_POST['email'] ?? '');
+
+    // IMAGE
+    $imageName = $_FILES['image']['name'] ?? '';
+    $imageTmp  = $_FILES['image']['tmp_name'] ?? '';
+
+    $finalImage = 'default.jpg';
+
+    if (!empty($imageName)) {
+        $clean = preg_replace("/[^a-zA-Z0-9\.\-_]/", "", basename($imageName));
+        $finalImage = time() . '_' . $clean;
+
+        move_uploaded_file($imageTmp, "../uploads/" . $finalImage);
+    }
+
+    // FIELDS
+    $cash_amount = $_POST['cash_amount'] ?? NULL;
+
+    $gadget_type = $_POST['gadget_type'] ?? NULL;
+    $gadget_brand = $_POST['gadget_brand'] ?? NULL;
+    $gadget_color = $_POST['gadget_color'] ?? NULL;
+    $gadget_features = $_POST['gadget_features'] ?? NULL;
+
+    $document_type = $_POST['document_type'] ?? NULL;
+    $document_name = $_POST['document_name'] ?? NULL;
+
+    $other_description = $_POST['other_description'] ?? NULL;
+
+    // INSERT
+    $stmt = $conn->prepare("
+        INSERT INTO lost_found (
+            reported_location,
+            category,
+            status,
+            email,
+            image,
+            cash_amount,
+            gadget_type,
+            gadget_brand,
+            gadget_color,
+            gadget_features,
+            document_type,
+            document_name,
+            other_description
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    $stmt->bind_param(
+        "sssssdsssssss",
+        $location,
+        $category,
+        $status,
+        $email,
+        $finalImage,
+        $cash_amount,
+        $gadget_type,
+        $gadget_brand,
+        $gadget_color,
+        $gadget_features,
+        $document_type,
+        $document_name,
+        $other_description
+    );
+
+    $stmt->execute();
+    $newId = $stmt->insert_id;
+    $stmt->close();
+
+    $hasMatch = false;
+
+    // MATCH SYSTEM
+    if ($status === 'Lost') {
+        $matchStmt = $conn->prepare("SELECT * FROM lost_found WHERE status = 'Found' AND category = ? AND is_claimed = 0 AND is_resolved = 0 AND ABS(DATEDIFF(created_at, NOW())) <= 7");
+    } else {
+        $matchStmt = $conn->prepare("SELECT * FROM lost_found WHERE status = 'Lost' AND category = ? AND is_claimed = 0 AND is_resolved = 0 AND ABS(DATEDIFF(created_at, NOW())) <= 7");
+    }
+    $matchStmt->bind_param("s", $category);
+    $matchStmt->execute();
+    $matches = $matchStmt->get_result();
+
+    while ($match = $matches->fetch_assoc()) {
+
+        $matched = false;
+
+        if ($category === 'Cash') {
+            if ($cash_amount == $match['cash_amount']) $matched = true;
+        }
+        elseif ($category === 'Gadget') {
+            if (
+                strtolower($gadget_brand) == strtolower($match['gadget_brand']) &&
+                strtolower($gadget_color) == strtolower($match['gadget_color'])
+            ) $matched = true;
+        }
+        elseif ($category === 'Document') {
+            if (strtolower($document_name) == strtolower($match['document_name'])) $matched = true;
+        }
+        elseif ($category === 'Other') {
+            if (strtolower($other_description) == strtolower($match['other_description'])) $matched = true;
+        }
+
+        if ($matched) {
+            $hasMatch = true;
+
+            $lostId = ($status === 'Lost') ? $newId : $match['id'];
+            $foundId = ($status === 'Found') ? $newId : $match['id'];
+
+            $check = $conn->prepare("SELECT id FROM lost_found_matches WHERE lost_id = ? AND found_id = ?");
+            $check->bind_param("ii", $lostId, $foundId);
+            $check->execute();
+
+            if ($check->get_result()->num_rows === 0) {
+                $insertMatch = $conn->prepare("INSERT INTO lost_found_matches (lost_id, found_id) VALUES (?, ?)");
+                $insertMatch->bind_param("ii", $lostId, $foundId);
+                $insertMatch->execute();
+            }
+        }
+    }
+
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    // header("Location: " . ($hasMatch ? "adminLostFoundMatches.php" : "adminLostFoundList.php"));
+
+    if ($hasMatch) {
+        header("Location: adminLostFoundMatches.php");
+    } else {
+        header("Location: adminLostFoundList.php");
+    }
+
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Lost & Found</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+html { 
+    scroll-behavior: smooth; 
+}
+
+#possibleMatchesCard {
+    scroll-margin-top: 20px; 
+}
+</style>
+</head>
+<body class="bg-light">
+
+<div class="container my-5">
+
+    <div class="alert alert-info shadow-sm">
+        <h5 class="mb-2">Match Detection Information</h5>
+        <p class="mb-1">
+            The system automatically detects possible matches
+            between lost and found items.
+        </p>
+
+        <ul class="mb-2">
+            <li><b>Cash</b> → amount comparison</li>
+            <li><b>Gadget</b> → brand/model and color</li>
+            <li><b>Document</b> → name on document</li>
+            <li><b>Other</b> → item description</li>
+        </ul>
+
+        <?php
+        $currentDate = date('F d');
+        $startDate = date('F d', strtotime('-6 days'));
+        ?>
+
+        <small class="text-muted">
+            Only reports within the last <b>7 days</b> are included
+            in the matching process. For example, if today is
+            <b><?= $currentDate ?></b>, the system will only check
+            reports dated <b><?= $startDate ?> to <?= $currentDate ?></b>.
+        </small>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDE -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h4 class="mb-0">Create Lost & Found</h4>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST" enctype="multipart/form-data">
+
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+                        <!-- STATUS -->
+                        <div class="border rounded-3 p-3 mb-3 ">
+
+                            <label class="form-label fw-bold">
+                                Item Status
+                            </label>
+                            <select name="status" class="form-select" onchange="showLocation(this); loadMatches();" required>
+                                <option value="" disabled selected hidden>Select Status</option>
+                                <option value="Lost">Lost</option>
+                                <option value="Found">Found</option>
+                            </select>
+
+                            <div id="locationContainer" class="mt-3"></div>
+                        </div>
+
+                        <!-- CATEGORY -->
+                        <div class="mb-3">
+                            <label class="fw-bold">Category</label>
+                            <select name="category" class="form-select" onchange="showCategory(this); loadMatches();" required>
+                                <option value="" disabled selected>Select Category</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Gadget">Gadget</option>
+                                <option value="Document">Document</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            <div id="dynamicFields" class="mt-3"></div>
+                        </div>
+
+                        <!-- IMAGE -->
+                        <div class="mb-3">
+                            <label class="fw-bold">Upload Image</label>
+                            <input type="file" name="image" class="form-control">
+                        </div>
+
+                        <button class="btn btn-primary w-100">Create</button>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+                <!-- RIGHT SIDE -->
+            <div class="col-lg-6">
+
+                <div id="possibleMatchesCard" class="card shadow-sm border-0 rounded-4 h-100">
+
+                    <div class="card-header bg-success text-white rounded-top-4">
+
+                        <h4 class="mb-0">
+                            Possible Matches
+                        </h4>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="matchResults">
+
+                            <div class="text-center text-muted py-5">
+
+                                <h5>
+                                    No matches yet
+                                </h5>
+
+                                <p>
+                                    Start filling up the form to see possible matches.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+    </div>
+</div>
+
+<!-- LOCATION -->
+<script>
+function showLocation(select) {
+    let html = '';
+
+    if (select.value === 'Lost') {
+        html = `
+            <input type="text" name="reported_location" class="form-control mb-3" placeholder="Last seen location" required>
+            <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
+        `;
+    } else {
+        html = `
+            <input type="text" name="reported_location" class="form-control mb-3" placeholder="Found location" required>
+        `;
+    }
+
+    document.getElementById('locationContainer').innerHTML = html;
+}
+</script>
+
+<!-- CATEGORY -->
+<script>
+function showCategory(select) {
+
+    let html = '';
+
+    if (select.value === 'Cash') {
+        html = `<input type="number" name="cash_amount" class="form-control mb-3" placeholder="Amount" required>`;
+    }
+
+    else if (select.value === 'Gadget') {
+        html = `
+            <select name="gadget_type" class="form-select mb-3" onchange="showGadgetFields(this)" required>
+                <option value="" disabled selected>Select Gadget Type</option>
+                <option value="Cell Phone">Cell Phone</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Smart watches">Smart watches</option>
+                <option value="Audio Gadgets">Audio Gadgets</option>
+            </select>
+
+            <div id="gadgetFields"></div>
+        `;
+    }
+
+    else if (select.value === 'Document') {
+        html = `
+            <!-- <input type="text" name="document_name" class="form-control mb-3" placeholder="Name" required> -->
+            <input type="text" name="document_type" class="form-control mb-3" placeholder="Document Type (ID, Passport, Cert.)" required>
+                <input type="text" name="document_name" class="form-control mb-3" placeholder="Name on Document" required>
+        `;
+    }
+
+    else if (select.value === 'Other') {
+        html = `<input type="text" name="other_description" class="form-control mb-3" placeholder="Description" required>`;
+    }
+
+    document.getElementById('dynamicFields').innerHTML = html;
+}
+</script>
+
+<!-- GADGET -->
+<script>
+function showGadgetFields(select) {
+    let html = '';
+
+    if (select.value !== '') {
+        html = `
+            <input type="text" name="gadget_brand" class="form-control mb-3" placeholder="Brand / Model (Samsung, Apple, Asus)" required>
+            <input type="text" name="gadget_color" class="form-control mb-3" placeholder="Color" required>
+            <textarea name="gadget_features" class="form-control mb-3" placeholder="Features" required></textarea>
+        `;
+    }
+
+    document.getElementById('gadgetFields').innerHTML = html;
+}
+</script>
+
+<!-- MATCHES -->
+<script>
+async function loadMatches() {
+
+    const status = document.querySelector('[name="status"]').value;
+    const category = document.querySelector('[name="category"]').value;
+
+    if (!status || !category) return;
+
+    const formData = new FormData();
+    formData.append('status', status);
+    formData.append('category', category);
+
+    const res = await fetch('checkMatches.php', {
+        method: 'POST',
+        body: formData
+    });
+
+    const data = await res.json();
+
+    let html = '';
+
+    if (data.length === 0) {
+        html = `<div class="alert alert-secondary">No matches found</div>`;
+    }
+
+    data.forEach(item => {
+
+        let details = '';
+
+        if (item.category === 'Cash') {
+            details = `Amount: ₱${item.cash_amount}`; //💰
+        } else if (item.category === 'Gadget') {
+            details = `
+            Type: ${item.gadget_type}<br>
+            Brand/Model: ${item.gadget_brand} | ${item.gadget_color}`; //📱
+        } else if (item.category === 'Document') {
+            details = `📄 ${item.document_name}`;
+        } else {
+            details = `Description: ${item.other_description}`; //📝
+        }
+
+        html += `
+            <div class="card mb-2 border-success">
+                <div class="card-body">
+                    <b>${item.category}</b><br>
+                    ${details}<br>
+                    <small>${item.reported_location}</small>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('matchResults').innerHTML = html;
+
+    if (data.length > 0) {
+        document.getElementById('possibleMatchesCard')
+        .scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+</script>
+
+</body>
+</html>  what if nag create si admin dapat makikita sa list yung name ni admin gets
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//adminLostFoundClaim.php <?php
+
+include '../middleware/adminMiddleware.php';
+
+include '../config/db.php';
+
+require '../vendor/autoload.php';
+
+
+
+use PHPMailer\PHPMailer\PHPMailer;
+
+use PHPMailer\PHPMailer\Exception;
+
+
+
+$id = (int)$_GET['id'];
+
+
+
+$stmt = $conn->prepare("SELECT * FROM lost_found WHERE id=?");
+
+$stmt->bind_param("i", $id);
+
+$stmt->execute();
+
+$item = $stmt->get_result()->fetch_assoc();
+
+
+
+if (!$item) die("Not found");
+
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+
+
+    $name = trim($_POST['claimed_by']);
+
+    $student_id = trim($_POST['claimed_id']);
+
+    $email = trim($_POST['claimed_email']);
+
+    $contact = trim($_POST['claimed_contact']);
+
+    $department = trim($_POST['claimed_department']);
+
+    $address = trim($_POST['claimed_address']);
+
+
+
+    $stmt = $conn->prepare("UPDATE lost_found SET claimed_by=?, claimed_id=?, claimed_email=?, claimed_contact=?, claimed_department=?, claimed_address=?, claimed_date=NOW(), is_claimed=1 WHERE id=?");
+
+    $stmt->bind_param("ssssssi", $name, $student_id, $email, $contact, $department, $address, $id);
+
+    $stmt->execute();
+
+
+
+
+
+     /*
+
+    |--------------------------------------------------------------------------
+
+    | Delete related matches after successful claim
+
+    |--------------------------------------------------------------------------
+
+    | Kapag na-claim na ang item, hindi na ito dapat lumabas
+
+    | sa matching records kaya buburahin natin lahat ng
+
+    | connected records sa lost_found_matches table.
+
+    */
+
+
+
+    $deleteMatches = $conn->prepare("DELETE FROM lost_found_matches WHERE lost_id = ? OR found_id = ?");
+
+    $deleteMatches->bind_param("ii", $id, $id);
+
+    $deleteMatches->execute();
+
+    $deleteMatches->close();
+
+
+
+    // =========================
+
+    // SEND EMAIL
+
+    // =========================
+
+
+
+    if (!empty($email)) {
+
+
+
+        try {
+
+
+
+            $mail = new PHPMailer(true);
+
+
+
+            $mail->isSMTP();
+
+            $mail->Host       = 'smtp.gmail.com';
+
+            $mail->SMTPAuth   = true;
+
+
+
+            $mail->Username   = 'princepls17@gmail.com';
+
+            $mail->Password   = 'vtrb qvbo ddzj osxe';
+
+
+
+            $mail->SMTPSecure = 'tls';
+
+            $mail->Port       = 587;
+
+
+
+            $mail->setFrom(
+
+                'princepls17@gmail.com',
+
+                'Lost & Found System'
+
+            );
+
+
+
+            $mail->addAddress($email);
+
+
+
+            $mail->isHTML(true);
+
+            $mail->Subject = 'Item Successfully Claimed';
+
+
+
+            $mail->Body = "
+
+                <h2>Claim Confirmation</h2>
+
+
+
+                <p>Good day <b>{$name}</b>,</p>
+
+
+
+                <p>
+
+                    Your item has been successfully claimed
+
+                    from the Lost & Found Office.
+
+                </p>
+
+
+
+                <hr>
+
+
+
+                <p><b>Category:</b> {$item['category']}</p>
+
+                <p><b>Claim Date:</b> " . date('F d, Y h:i A') . "</p>
+
+
+
+                <br>
+
+
+
+                <p>Thank you for using the system.</p>
+
+            ";
+
+
+
+            $mail->send();
+
+
+
+        } catch (Exception $e) {
+
+            // optional log
+
+        }
+
+    }
+
+
+
+    header("Location: adminLostFoundList.php");
+
+    exit();
+
+}
+
+?>
+
+
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Claim Item</title>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+
+
+<style>
+
+    /* Spinner styles */
+
+    .spinner-wrapper{
+
+        background-color: rgba(255,255,255,0.9);
+
+        position: fixed;
+
+        top: 0;
+
+        left: 0;
+
+        width: 100%;
+
+        height: 100%;
+
+        z-index: 9999;
+
+        display: none;
+
+        justify-content: center;
+
+        align-items: center;
+
+    }
+
+
+
+    .spinner-border{
+
+        height: 60px;
+
+        width: 60px;
+
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<!-- Spinner -->
+
+<div class="spinner-wrapper" id="spinner">
+
+    <div class="spinner-border text-info" role="status">
+
+        <span class="visually-hidden">Loading...</span>
+
+    </div>
+
+</div>
+
+
+
+
+
+    <div class="container mt-5">
+
+        <h2>Claim Item</h2>
+
+        <h4><?= htmlspecialchars($item['category']) ?></h4>
+
+        <h5>Item Details</h5>
+
+
+
+        <?php if ($item['category'] === 'Cash'): ?>
+
+
+
+            <p>
+
+                Amount:
+
+                ₱<?= number_format($item['cash_amount'], 2) ?>
+
+            </p>
+
+
+
+        <?php elseif ($item['category'] === 'Gadget'): ?>
+
+
+
+            <p>
+
+                Type:
+
+                <?= htmlspecialchars($item['gadget_type']) ?>
+
+            </p>
+
+
+
+            <p>
+
+                Brand:
+
+                <?= htmlspecialchars($item['gadget_brand']) ?>
+
+            </p>
+
+
+
+            <p>
+
+                Color:
+
+                <?= htmlspecialchars($item['gadget_color']) ?>
+
+            </p>
+
+
+
+            <p>
+
+                Features:
+
+                <?= htmlspecialchars($item['gadget_features']) ?>
+
+            </p>
+
+
+
+        <?php elseif ($item['category'] === 'Document'): ?>
+
+
+
+            <p>
+
+                Document Type:
+
+                <?= htmlspecialchars($item['document_type']) ?>
+
+            </p>
+
+
+
+            <p>
+
+                Name:
+
+                <?= htmlspecialchars($item['document_name']) ?>
+
+            </p>
+
+
+
+        <?php elseif ($item['category'] === 'Other'): ?>
+
+
+
+            <p>
+
+                Description:
+
+                <?= htmlspecialchars($item['other_description']) ?>
+
+            </p>
+
+
+
+        <?php endif; ?>
+
+
+
+        <img src="../uploads/<?= htmlspecialchars($item['image']) ?>"
+
+            width="120"
+
+            class="mb-3">
+
+
+
+        <form method="POST" id="claimForm">
+
+            <input type="text" name="claimed_by" class="form-control mb-2" placeholder="Full Name" required>
+
+            <input type="text" name="claimed_id" class="form-control mb-2" placeholder="ID" required>
+
+            <input type="email" name="claimed_email" class="form-control mb-2" placeholder="Email Address" required>
+
+            <input type="text" name="claimed_contact" class="form-control mb-2" placeholder="Contact Number" required>
+
+
+
+            <select name="claimed_department" class="form-control mb-2" required>
+
+                <option value="">Select Department</option>
+
+                <option value="IT">IT</option>
+
+                <option value="CRIM">CRIM</option>
+
+            </select>
+
+
+
+            <input type="text" name="claimed_address" class="form-control mb-3" placeholder="Address" required>
+
+
+
+            <button class="btn btn-success">
+
+                Confirm Claim
+
+            </button>
+
+
+
+            <a href="adminLostFoundList.php"
+
+            class="btn btn-secondary">
+
+                Back
+
+            </a>
+
+        </form>
+
+    </div>
+
+
+
+
+
+    <script>
+
+const form = document.getElementById('claimForm');
+
+const spinner = document.getElementById('spinner');
+
+
+
+form.addEventListener('submit', () => {
+
+    spinner.style.display = 'flex'; // show spinner immediately
+
+});
+
+</script>
+
+
+
+</body>
+
+</html> gawin nating released_by

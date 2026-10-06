@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lost Items</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --navy: #2E7D53;
+    --navy-deep: #1F5D3D;
+    --cream: #F4F4F3;
+    --paper: #FFFFFF;
+    --brass: #3B8F63;
+    --brass-dark: #276B49;
+    --ink: #232322;
+    --ink-soft: #6B6B69;
+    --hairline: #E2E2E0;
+    --sage: #E5F3EA;
+    --sage-ink: #276B49;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 20px;
+    background: var(--cream);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+  }
+
+  .container { width: 100%; max-width: 920px; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: var(--brass-dark);
+  }
+
+  h2.title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 32px;
+  }
+
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .item-card {
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(27, 42, 74, 0.04);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-image {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--sage);
+    overflow: hidden;
+  }
+
+  .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .item-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--brass);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 3px;
+  }
+
+  .item-body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .item-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .item-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+
+  .item-location svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--brass-dark);
+    flex-shrink: 0;
+  }
+
+  .item-details-btn {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--navy);
+    color: var(--cream);
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s ease;
+  }
+
+  .item-details-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--brass);
+  }
+
+  .item-details-btn:hover { background: var(--navy-deep); }
+
+  @media (max-width: 480px) {
+    h2.title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <p class="eyebrow">Lost &amp; found</p>
+  <h2 class="title">Lost items</h2>
+
+  <div class="items-grid">
+
+    <div class="item-card">
+      <div class="item-image">
+        <span class="item-tag">Lost</span>
+        <img src="images/id.jpg" alt="Student ID">
+      </div>
+      <div class="item-body">
+        <h5 class="item-title">Student ID</h5>
+        <p class="item-location">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          Lost at Library
+        </p>
+        <a href="item-details.html" class="item-details-btn">
+          View details
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="item-card">
+      <div class="item-image">
+        <span class="item-tag">Lost</span>
+        <img src="images/bag.jpg" alt="Black bag">
+      </div>
+      <div class="item-body">
+        <h5 class="item-title">Black bag</h5>
+        <p class="item-location">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          Lost near Gate 2
+        </p>
+        <a href="item-details.html" class="item-details-btn">
+          View details
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

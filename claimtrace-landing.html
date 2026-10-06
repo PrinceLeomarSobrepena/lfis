@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaimTrace — Enterprise Lost &amp; Found Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+  :root{
+    --ink:#0F1B2D;
+    --slate:#1B2A41;
+    --paper:#F5F6F8;
+    --paper-line:#DFE3E9;
+    --steel:#2B4C7E;
+    --steel-deep:#1E3560;
+    --amber:#C97B2E;
+    --forest:#2F6B4F;
+    --ink-70:rgba(15,27,45,0.7);
+    --ink-50:rgba(15,27,45,0.5);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    font-size:16px;
+    line-height:1.55;
+  }
+  .display{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    text-transform:none;
+    letter-spacing:-0.01em;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:500;
+  }
+  a{ text-decoration:none; }
+  .btn{ border-radius:3px; font-weight:600; padding:0.65rem 1.4rem; font-size:0.95rem; }
+  .btn-steel{ background:var(--steel); color:#fff; border:1px solid var(--steel); }
+  .btn-steel:hover{ background:var(--steel-deep); color:#fff; }
+  .btn-outline-ink{ border:1px solid var(--ink); color:var(--ink); background:transparent; }
+  .btn-outline-ink:hover{ background:var(--ink); color:#fff; }
+  .btn-outline-light{ border:1px solid rgba(255,255,255,0.4); color:#fff; }
+  .btn-outline-light:hover{ background:#fff; color:var(--ink); }
+
+  :focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+  /* NAV */
+  .navbar{
+    background:var(--paper);
+    border-bottom:1px solid var(--paper-line);
+    padding-top:0.9rem; padding-bottom:0.9rem;
+  }
+  .brand-mark{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size:1.05rem;
+    letter-spacing:-0.01em;
+  }
+  .brand-mark .dot{ color:var(--amber); }
+  .nav-link-custom{
+    font-size:0.92rem; font-weight:500; color:var(--ink-70);
+    margin:0 0.85rem;
+  }
+  .nav-link-custom:hover{ color:var(--ink); }
+
+  /* HERO */
+  .hero{ padding:5.5rem 0 5rem; background:var(--paper); }
+  .hero h1{
+    font-size:3.4rem; line-height:1.04; margin-bottom:1.25rem;
+  }
+  .hero p.lede{ font-size:1.12rem; color:var(--ink-70); max-width:34rem; }
+  .trust-line{ font-size:0.85rem; color:var(--ink-50); margin-top:2.2rem; max-width:26rem; }
+
+  /* TAG (signature element) */
+  .tag-wrap{ display:flex; justify-content:center; padding-top:0.5rem; }
+  .claim-tag{
+    position:relative;
+    width:100%;
+    max-width:360px;
+    background:#FBFAF6;
+    border:1px solid var(--paper-line);
+    border-radius:6px;
+    box-shadow:0 22px 48px -18px rgba(15,27,45,0.32);
+    transform:rotate(2.2deg);
+    padding:1.6rem 1.5rem 1.4rem;
+  }
+  .claim-tag::before{
+    content:"";
+    position:absolute;
+    top:22px; left:-11px;
+    width:22px; height:22px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:50%;
+  }
+  .claim-tag::after{
+    content:"";
+    position:absolute;
+    top:14px; left:14px; right:14px;
+    border-top:1.5px dashed #C9CDD4;
+  }
+  .tag-string{
+    position:absolute; top:-38px; left:2px;
+    width:34px; height:44px;
+    border:1.5px solid #B9BFC8;
+    border-bottom:none;
+    border-radius:20px 20px 0 0;
+  }
+  .tag-id{ font-size:1.05rem; letter-spacing:0.02em; color:var(--ink); }
+  .tag-item-name{ font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:1.5rem; margin:0.5rem 0 0.15rem; }
+  .tag-meta{ font-size:0.82rem; color:var(--ink-50); }
+  .tag-status{
+    display:inline-flex; align-items:center; gap:0.4rem;
+    font-family:'IBM Plex Mono', monospace; font-size:0.75rem; font-weight:500;
+    letter-spacing:0.06em; text-transform:uppercase;
+    padding:0.32rem 0.65rem; border-radius:20px;
+    margin-top:0.9rem;
+    transition:background 0.4s ease, color 0.4s ease;
+  }
+  .tag-status .dot-status{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .status-reported{ background:rgba(201,123,46,0.14); color:var(--amber); }
+  .status-matched{ background:rgba(43,76,126,0.14); color:var(--steel); }
+  .status-claimed{ background:rgba(47,107,79,0.14); color:var(--forest); }
+  .barcode{
+    height:30px; margin-top:1.1rem;
+    background-image:repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px, var(--ink) 5px 6px, transparent 6px 11px, var(--ink) 11px 14px, transparent 14px 17px);
+    opacity:0.85;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .tag-status{ transition:none; }
+  }
+
+  /* TRUST STRIP */
+  .trust-strip{ border-top:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); padding:1.6rem 0; }
+  .trust-strip .word{
+    font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:1.15rem;
+    color:var(--ink-50); letter-spacing:0.02em;
+  }
+
+  /* SECTION HEADERS */
+  .section{ padding:5.5rem 0; }
+  .section-head{ max-width:38rem; margin-bottom:3rem; }
+  .section-head h2{ font-size:2.4rem; line-height:1.08; }
+  .section-head p{ color:var(--ink-70); font-size:1.02rem; }
+
+  /* PIPELINE */
+  .pipeline{ position:relative; }
+  .pipe-step{ position:relative; padding:0 0.5rem; }
+  .pipe-num{
+    font-family:'IBM Plex Mono', monospace; font-size:0.8rem; color:var(--amber);
+    border:1px solid var(--paper-line); border-radius:50%;
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:1.1rem; background:#fff;
+  }
+  .pipe-step h3{ font-size:1.4rem; margin-bottom:0.5rem; }
+  .pipe-step p{ color:var(--ink-70); font-size:0.95rem; }
+  .pipe-rule{
+    position:absolute; top:17px; left:calc(50% + 40px); right:calc(-50% + 40px);
+    border-top:1.5px dashed #C9CDD4;
+  }
+  @media (max-width: 767px){ .pipe-rule{ display:none; } }
+
+  /* FEATURE CARDS */
+  .feature-card{
+    border:1px solid var(--paper-line); background:#fff; border-radius:6px;
+    padding:1.7rem 1.6rem; height:100%;
+  }
+  .feature-card i{ font-size:1.25rem; color:var(--steel); }
+  .feature-card h3{ font-size:1.15rem; margin:0.9rem 0 0.5rem; }
+  .feature-card p{ font-size:0.92rem; color:var(--ink-70); margin-bottom:0; }
+
+  /* STATS */
+  .stats-band{ background:var(--ink); color:#fff; padding:4.2rem 0; }
+  .stat-num{ font-family:'Barlow Condensed', sans-serif; font-weight:700; font-size:3.1rem; line-height:1; color:#fff; }
+  .stat-label{ font-family:'IBM Plex Mono', monospace; font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-top:0.5rem; }
+
+  /* QUOTE */
+  .quote-section{ padding:5.5rem 0; background:#EFEFE9; border-top:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line);}
+  .quote-text{ font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:1.9rem; line-height:1.22; max-width:44rem; }
+  .quote-attr{ font-size:0.88rem; color:var(--ink-70); margin-top:1.4rem; }
+
+  /* CTA */
+  .cta-section{ padding:5.5rem 0; }
+  .cta-panel{
+    background:var(--steel-deep); color:#fff; border-radius:8px; padding:3.2rem;
+    position:relative; overflow:hidden;
+  }
+  .cta-panel h2{ font-size:2.1rem; }
+  .cta-panel p{ color:rgba(255,255,255,0.78); }
+  .form-control{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.25); color:#fff;
+    border-radius:3px; padding:0.65rem 0.85rem; font-size:0.92rem;
+  }
+  .form-control::placeholder{ color:rgba(255,255,255,0.45); }
+  .form-control:focus{ background:rgba(255,255,255,0.09); border-color:var(--amber); color:#fff; box-shadow:none; }
+
+  /* FOOTER */
+  footer{ padding:3.5rem 0 2rem; border-top:1px solid var(--paper-line); }
+  footer h6{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-50); margin-bottom:1rem; }
+  footer a.flink{ display:block; font-size:0.9rem; color:var(--ink-70); margin-bottom:0.55rem; }
+  footer a.flink:hover{ color:var(--ink); }
+  .footer-bottom{ font-size:0.82rem; color:var(--ink-50); margin-top:2.5rem; }
+
+  @media (max-width: 767px){
+    .hero h1{ font-size:2.5rem; }
+    .section-head h2{ font-size:1.9rem; }
+    .cta-panel{ padding:2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand brand-mark" href="#">CLAIM<span class="dot">·</span>TRACE</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navMain">
+      <a class="nav-link-custom" href="#how">How it works</a>
+      <a class="nav-link-custom" href="#platform">Platform</a>
+      <a class="nav-link-custom" href="#proof">Results</a>
+      <a class="btn btn-outline-ink btn-sm ms-lg-3" href="#login">Sign in</a>
+      <a class="btn btn-steel btn-sm ms-2" href="#demo">Request a demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="eyebrow mb-3">Enterprise Lost &amp; Found</div>
+        <h1 class="display">Every lost item, tracked like a shipment.</h1>
+        <p class="lede">ClaimTrace gives security, facilities, and guest-services teams one system to log found items, match them to reports, and hand them back — with a full record for every step.</p>
+        <div class="d-flex gap-3 mt-4 flex-wrap">
+          <a href="#demo" class="btn btn-steel">Request a demo</a>
+          <a href="#how" class="btn btn-outline-ink">See how it works</a>
+        </div>
+        <p class="trust-line">Deployed across security and facilities operations at multi-site campuses, transit hubs, hotels, and corporate offices.</p>
+      </div>
+      <div class="col-lg-6">
+        <div class="tag-wrap">
+          <div class="claim-tag">
+            <div class="tag-string"></div>
+            <div class="mono tag-id">#LF-88214</div>
+            <div class="tag-item-name">Backpack, navy</div>
+            <div class="tag-meta">Found · Gate B Security Desk · Jul 14</div>
+            <div class="tag-status status-reported" id="tagStatus">
+              <span class="dot-status"></span><span id="tagStatusText">Reported</span>
+            </div>
+            <div class="barcode" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-6 col-md-2"><span class="word">Transit</span></div>
+      <div class="col-6 col-md-2"><span class="word">Campus</span></div>
+      <div class="col-6 col-md-2"><span class="word">Hospitality</span></div>
+      <div class="col-6 col-md-2"><span class="word">Arenas</span></div>
+      <div class="col-6 col-md-2"><span class="word">Corporate</span></div>
+      <div class="col-6 col-md-2"><span class="word">Healthcare</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow mb-2">The workflow</div>
+      <h2 class="display">One path from found to returned.</h2>
+      <p>Three stages, the same for every site, every item, every team member — so nothing depends on memory or a spreadsheet.</p>
+    </div>
+    <div class="row pipeline g-5">
+      <div class="pipe-rule d-none d-md-block"></div>
+      <div class="col-md-4 pipe-step">
+        <div class="pipe-num">01</div>
+        <h3 class="display">Report</h3>
+        <p>Staff or guests log a found or lost item in under a minute — photo, location, and description, from a desk or a phone.</p>
+      </div>
+      <div class="col-md-4 pipe-step">
+        <div class="pipe-num">02</div>
+        <h3 class="display">Match</h3>
+        <p>The matching engine cross-references descriptions, locations, and time windows, and surfaces likely matches automatically.</p>
+      </div>
+      <div class="col-md-4 pipe-step">
+        <div class="pipe-num">03</div>
+        <h3 class="display">Return</h3>
+        <p>The owner is notified, verifies ownership, and picks up or ships the item — with every step logged for audit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="platform" style="background:#fff; border-top:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line);">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow mb-2">The platform</div>
+      <h2 class="display">Built for teams running more than one site.</h2>
+      <p>Everything a lost and found program needs to run consistently, from intake to disposition.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-inboxes"></i>
+          <h3>Multi-site intake</h3>
+          <p>Front desk, security post, kiosk, or mobile — every item enters the same queue, tagged to its site.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-diagram-3"></i>
+          <h3>Automatic matching</h3>
+          <p>Found items and lost reports are compared continuously, ranked by likelihood, and queued for staff review.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-shield-check"></i>
+          <h3>Chain-of-custody log</h3>
+          <p>Every handoff, storage move, and status change is timestamped and attributed — ready for an audit at any time.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-search"></i>
+          <h3>Guest self-service</h3>
+          <p>Owners search and file a claim themselves, cutting the calls and emails your front desk has to field.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-archive"></i>
+          <h3>Storage &amp; disposition</h3>
+          <p>Shelf and bin locations, hold periods, and disposal or donation workflows, tracked against policy.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="bi bi-bar-chart-line"></i>
+          <h3>Reporting</h3>
+          <p>Return rate, average time to return, and volume by site and category, in one dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-band" id="proof">
+  <div class="container">
+    <div class="row g-4 text-center text-md-start">
+      <div class="col-6 col-md-3">
+        <div class="stat-num mono">96%</div>
+        <div class="stat-label">Match accuracy</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-num mono">3.2d</div>
+        <div class="stat-label">Avg. time to return</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-num mono">48</div>
+        <div class="stat-label">Sites live</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-num mono">1.1M</div>
+        <div class="stat-label">Items tracked</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="quote-section">
+  <div class="container">
+    <p class="quote-text display">"We went from a shared spreadsheet across nine buildings to one queue. Our average return time dropped from nine days to three."</p>
+    <p class="quote-attr">Director of Campus Safety, private university system</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="demo">
+  <div class="container">
+    <div class="cta-panel">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-6">
+          <div class="eyebrow mb-2" style="color:#F0B27A;">Get started</div>
+          <h2 class="display">See ClaimTrace running on your sites.</h2>
+          <p>A 30-minute walkthrough with your team — intake, matching, and reporting, using a scenario from your own locations.</p>
+        </div>
+        <div class="col-lg-6">
+          <form onsubmit="return false;">
+            <div class="row g-3">
+              <div class="col-sm-6"><input type="text" class="form-control" placeholder="Full name"></div>
+              <div class="col-sm-6"><input type="email" class="form-control" placeholder="Work email"></div>
+              <div class="col-12"><input type="text" class="form-control" placeholder="Organization"></div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-outline-light w-100">Request a demo</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="brand-mark mb-3">CLAIM<span class="dot">·</span>TRACE</div>
+        <p class="footer-bottom mt-0" style="max-width:16rem;">Lost and found operations for multi-site organizations.</p>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Product</h6>
+        <a class="flink" href="#platform">Platform</a>
+        <a class="flink" href="#how">How it works</a>
+        <a class="flink" href="#proof">Results</a>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Company</h6>
+        <a class="flink" href="#">About</a>
+        <a class="flink" href="#">Security</a>
+        <a class="flink" href="#">Careers</a>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Resources</h6>
+        <a class="flink" href="#">Documentation</a>
+        <a class="flink" href="#">Support</a>
+        <a class="flink" href="#demo">Contact sales</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 ClaimTrace. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Signature hero tag: cycles status to show the report -> match -> return lifecycle
+  (function(){
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var states = [
+      {cls:'status-reported', text:'Reported'},
+      {cls:'status-matched', text:'Matched'},
+      {cls:'status-claimed', text:'Claimed'}
+    ];
+    var el = document.getElementById('tagStatus');
+    var txt = document.getElementById('tagStatusText');
+    if(reduceMotion || !el){ return; }
+    var i = 0;
+    setInterval(function(){
+      i = (i + 1) % states.length;
+      el.classList.remove('status-reported','status-matched','status-claimed');
+      el.classList.add(states[i].cls);
+      txt.textContent = states[i].text;
+    }, 2600);
+  })();
+</script>
+</body>
+</html>

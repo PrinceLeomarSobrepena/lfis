@@ -1,0 +1,381 @@
+CREATE DATABASE capstone1v1;
+USE capstone1v1;
+
+-- 1. Table: admin
+-- ============================================
+CREATE TABLE admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    contact VARCHAR(20) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_as VARCHAR(50) NOT NULL DEFAULT 'admin',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    banned TINYINT(1) DEFAULT 0,
+
+    google_uid VARCHAR(100) DEFAULT NULL,
+    picture VARCHAR(255) DEFAULT NULL
+);
+
+-- ============================
+-- 2. Table: adminLogs
+-- ============================
+CREATE TABLE adminLogs (
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    adminId INT NOT NULL,
+    login_time DATETIME DEFAULT NULL,
+    logout_time DATETIME DEFAULT NULL,
+    status ENUM('online','offline') DEFAULT 'offline',
+    FOREIGN KEY (adminId) REFERENCES admin(id) ON DELETE CASCADE
+);
+
+
+
+-- ============================================
+-- 5. Table: staff
+-- ============================================
+CREATE TABLE staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    contact VARCHAR(20) NOT NULL,
+
+    password VARCHAR(255) NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    role_as VARCHAR(50) NOT NULL DEFAULT 'staff',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    banned TINYINT(1) DEFAULT 0,
+
+    google_uid VARCHAR(100) DEFAULT NULL,
+    picture VARCHAR(255) DEFAULT NULL,
+
+    -- new password
+    mustChangePassword TINYINT(1) NOT NULL DEFAULT 0
+);
+
+-- ============================================
+-- 6. Table: staffLogs
+-- ============================================
+CREATE TABLE staffLogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staffId INT NOT NULL,
+    login_time DATETIME DEFAULT NULL,
+    logout_time DATETIME DEFAULT NULL,
+    status ENUM('online', 'offline') DEFAULT 'offline',
+    FOREIGN KEY (staffId) REFERENCES staff(id) ON DELETE CASCADE
+);
+
+
+-- ============================================
+-- 7. Table: council
+-- ============================================
+CREATE TABLE council (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    contact VARCHAR(20) NOT NULL,
+
+    password VARCHAR(255) NOT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    role_as VARCHAR(50) NOT NULL DEFAULT 'council',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    banned TINYINT(1) DEFAULT 0,
+
+    google_uid VARCHAR(100) DEFAULT NULL,
+    picture VARCHAR(255) DEFAULT NULL,
+
+    -- new password
+    mustChangePassword TINYINT(1) NOT NULL DEFAULT 0
+);
+
+-- ============================================
+-- 8. Table: councilLogs
+-- ============================================
+CREATE TABLE councilLogs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    councilId INT NOT NULL,
+    login_time DATETIME DEFAULT NULL,
+    logout_time DATETIME DEFAULT NULL,
+    status ENUM('online', 'offline') DEFAULT 'offline',
+    FOREIGN KEY (councilId) REFERENCES council(id) ON DELETE CASCADE
+);
+
+
+-- ============================================
+-- 7. Table: password_resets    
+-- ============================================
+
+-- ===========================================
+-- 8. customer registration verification
+
+CREATE TABLE lost_found (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category ENUM('Cash','Gadget','Document','Other') NOT NULL,
+
+    reported_location VARCHAR(255) DEFAULT NULL,
+
+    extra_details TEXT DEFAULT NULL,
+
+    status ENUM('Lost','Found') NOT NULL,
+    email VARCHAR(100) DEFAULT NULL,
+    image VARCHAR(255) DEFAULT 'default.jpg',
+
+    is_claimed TINYINT(1) DEFAULT 0,
+    claimed_by VARCHAR(255) DEFAULT NULL,
+    claimed_id VARCHAR(255) DEFAULT NULL,
+    claimed_email VARCHAR(255) DEFAULT NULL,
+    claimed_contact VARCHAR(255) DEFAULT NULL,
+    claimed_department ENUM('IT','CRIM') DEFAULT NULL,
+    claimed_address VARCHAR(255) DEFAULT NULL,
+    claimed_date DATETIME DEFAULT NULL,
+
+    is_returned TINYINT(1) DEFAULT 0,
+    returned_by VARCHAR(255) DEFAULT NULL,
+    returned_id VARCHAR(255) DEFAULT NULL,
+    returned_email VARCHAR(255) DEFAULT NULL,
+    returned_contact VARCHAR(255) DEFAULT NULL,
+    returned_department ENUM('IT','CRIM') DEFAULT NULL,
+    returned_address VARCHAR(255) DEFAULT NULL,
+    returned_date DATETIME DEFAULT NULL;
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+NOTES:
+author sa adminLostFoundList.PHP
+pag si lumagpas na ng 7 days hindi na pwedi pinindutin ni cousil yung claim si admin na makaka pindot nun
+category,status = filter
+sa create lost item need ng email
+tas sa lost need ata gumawa ng found
+resolve checkbox
+view = eyeIcon, delete = trashIcon, edit = penIcon, claim = hanIcon or fileIcon   verify = airplainIcon
+pag lost need ng email kasi pag na resolve authomatic na makaka recieve sya kun kelan open yung claim room     /your report item has a similar report please come to room 201 to verify    /similar palang wag resolve muna
+
+https://www.youtube.com/watch?v=9NYHBx6xqkc :9:00  FAKE CLAIMERS  REFERENCES NUMBER
+https://www.youtube.com/watch?v=hXcB-fX-_KI
+
+
+
+
+
+
+
+CREATE TABLE lost_found (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    category ENUM('Cash','Gadget','Document','Other') NOT NULL,
+    status ENUM('Lost','Found') NOT NULL,
+
+    reported_location VARCHAR(255) DEFAULT NULL,
+    email VARCHAR(100) DEFAULT NULL,
+    image VARCHAR(255) DEFAULT 'default.jpg',
+
+    -- CASH
+    cash_amount DECIMAL(10,2) DEFAULT NULL,
+
+    -- GADGET
+    gadget_brand VARCHAR(100) DEFAULT NULL,
+    gadget_model VARCHAR(100) DEFAULT NULL,
+    gadget_color VARCHAR(100) DEFAULT NULL,
+    gadget_features TEXT DEFAULT NULL,
+
+    -- DOCUMENT
+    document_type VARCHAR(100) DEFAULT NULL,
+    document_name VARCHAR(100) DEFAULT NULL,
+
+    -- OTHER
+    other_description TEXT DEFAULT NULL,
+
+    -- CLAIM
+    is_claimed TINYINT(1) DEFAULT 0,
+    claimed_by VARCHAR(255) DEFAULT NULL,
+    claimed_id VARCHAR(255) DEFAULT NULL,
+    claimed_email VARCHAR(255) DEFAULT NULL,
+    claimed_contact VARCHAR(255) DEFAULT NULL,
+    claimed_department ENUM('IT','CRIM') DEFAULT NULL,
+    claimed_address VARCHAR(255) DEFAULT NULL,
+    claimed_date DATETIME DEFAULT NULL,
+
+    -- RETURN
+    -- is_returned TINYINT(1) DEFAULT 0,
+    -- returned_by VARCHAR(255) DEFAULT NULL,
+    -- returned_id VARCHAR(255) DEFAULT NULL,
+    -- returned_email VARCHAR(255) DEFAULT NULL,
+    -- returned_contact VARCHAR(255) DEFAULT NULL,
+    -- returned_department ENUM('IT','CRIM') DEFAULT NULL,
+    -- returned_address VARCHAR(255) DEFAULT NULL,
+    -- returned_date DATETIME DEFAULT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+🔧 Paano gumawa ng App Password?
+I-login mo ang Gmail account mo.
+
+Pumunta ka sa:
+👉 https://myaccount.google.com/security
+
+Hanapin ang “2-Step Verification” at i-enable mo ito kung hindi pa naka-on.
+
+Pag naka-on na ang 2FA, babalik ka sa:
+👉 https://myaccount.google.com/apppasswords
+
+Mag-login ulit kapag hiningi ni Google.
+
+Sa “Select app”, piliin mo: Mail
+
+Sa “Select device”, piliin mo: Other, tapos i-type: PHPMailer
+
+Click “Generate”
+
+Ipapakita ni Google ang 16-character password (e.g. xxyy zzxx aabb ccdd)
+— I-copy mo 'yan at 'yan ang gagamitin mo sa PHP code mo instead ng tunay mong password.
+
+
+twilio
+You're all verified!
+If you lose your phone, or don’t have access to your verification device, this code is your failsafe to access your account.
+
+Recovery code:  RQ4T7F4DGU8PQEPD2ULNTVFJ
+
+Account SID :            AC4ec2ef4409d0b03fa998648c79da8b68
+Auth Token:              5972dfae2b735ce81ff8ca1cc42fb576
+My Twilio phone number:  +15343446229
+
+https://console.twilio.com/
+composer require twilio/sdk
+
+
+princepls17@gmai.com bpo ncp
+JagC8EPe
+
+
+
+
+Upload Images
+Update Status
+Verify Claimed Items
+Print Reports
+Search and Filter Records
+
+Admin Features
+All Staff Management
+User Management
+Audit Logs
+Generate Reports (PDF/Excel)
+System Settings
+Backup Database
+Archive Old Records
+
+
+
+
+
+
+
+
+
+CREATE TABLE lost_found (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('Lost','Found') NOT NULL,
+    email VARCHAR(100) DEFAULT NULL,
+    image VARCHAR(255) DEFAULT 'default.jpg',
+
+    -- REPORTER
+    reporter_role ENUM('Student','Faculty','Visitor / Guest','Anonymous') DEFAULT NULL,
+    reporter_name VARCHAR(150) DEFAULT NULL,
+    reporter_id VARCHAR(50) DEFAULT NULL,
+    reporter_year VARCHAR(50) DEFAULT NULL,
+    reporter_department ENUM('BSA','CRIM','EDUC','HMTM','IT','RAD TECH / MED TECH') DEFAULT NULL,
+
+    category ENUM('Cash','Gadget','Document','Other') NOT NULL,
+    reported_location VARCHAR(255) DEFAULT NULL,
+
+    -- CASH
+    cash_amount DECIMAL(10,2) DEFAULT NULL,
+
+    -- GADGET
+    gadget_type ENUM('Cell Phone','Laptop','Tablet','Smart watches','Audio Gadgets') DEFAULT NULL,
+    gadget_brand VARCHAR(100) DEFAULT NULL,
+    gadget_color VARCHAR(100) DEFAULT NULL,
+    gadget_description TEXT DEFAULT NULL,
+
+    -- DOCUMENT
+    document_type VARCHAR(100) DEFAULT NULL,
+    document_name VARCHAR(100) DEFAULT NULL,
+
+    -- OTHER
+    other_title VARCHAR(150) DEFAULT NULL,
+    other_description TEXT DEFAULT NULL,
+
+    -- AUDIT
+    created_by INT DEFAULT NULL,
+    edited_by INT DEFAULT NULL,
+    -- edited_at TIMESTAMP DEFAULT NULL,
+    edited_at DATETIME DEFAULT NULL,
+
+    released_by INT DEFAULT NULL,
+    resolved_by INT DEFAULT NULL,
+
+    -- CLAIM
+    is_claimed TINYINT(1) DEFAULT 0,
+    claimed_by VARCHAR(255) DEFAULT NULL,
+    claimed_id VARCHAR(255) DEFAULT NULL,
+    claimed_email VARCHAR(255) DEFAULT NULL,
+    claimed_contact VARCHAR(255) DEFAULT NULL,
+
+    claimed_department ENUM('BSA', 'CRIM', 'EDUC', 'HMTM', 'IT', 'RAD TECH / MED TECH', 'FACULTY', 'VISITOR / GUEST') DEFAULT NULL,
+
+    claimed_address VARCHAR(255) DEFAULT NULL,
+    claimed_date DATETIME DEFAULT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- RESOLVED
+    is_resolved TINYINT(1) DEFAULT 0,
+    resolved_at DATETIME DEFAULT NULL,
+
+    -- RENEW
+    renewed_at DATETIME DEFAULT NULL,
+    renewed_by INT DEFAULT NULL
+);
+
+
+
+
+CREATE TABLE lost_found_matches (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lost_id INT NOT NULL,
+    found_id INT NOT NULL,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    is_resolved TINYINT(1) DEFAULT 0,
+    resolved_at DATETIME DEFAULT NULL,
+    matched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+CREATE TABLE lost_found_deletions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lost_found_id INT NOT NULL,
+    category ENUM('Cash','Gadget','Document','Other') NOT NULL,
+    status ENUM('Lost','Found') NOT NULL,
+
+   
+    was_resolved TINYINT(1) NOT NULL DEFAULT 0,
+    was_claimed TINYINT(1) NOT NULL DEFAULT 0,
+    was_disposed TINYINT(1) NOT NULL DEFAULT 0,
+
+    deleted_by INT NOT NULL,
+    deleted_role ENUM('admin','staff') NOT NULL,
+
+    deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

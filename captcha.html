@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body {
+    background: #3b7ef0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .login-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 2.5rem 2.25rem;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+  }
+
+  #togglePassword {
+    cursor: pointer;
+  }
+
+  .captcha-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #ced4da;
+    border-left: 6px solid #3b7ef0;
+    border-radius: 0.375rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    background: #fffef2;
+  }
+
+  .captcha-box:hover {
+    background: #f7f6e8;
+  }
+
+  .captcha-box.verified {
+    border-left-color: #28a745;
+    background: #f0faf1;
+  }
+
+  .captcha-box.loading {
+    border-left-color: #ffc107;
+    cursor: default;
+    background: linear-gradient(90deg, #fffef2 25%, #fbf6da 37%, #fffef2 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.1s ease infinite;
+  }
+
+  .captcha-text {
+    font-size: 0.95rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .captcha-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.4s ease;
+  }
+
+  .spinning {
+    animation: spin 0.6s ease;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .btn-login {
+    background: #3b7ef0;
+    border: none;
+    font-weight: 500;
+    padding: 0.6rem;
+  }
+
+  .btn-login:hover {
+    background: #2f68cc;
+  }
+
+  .btn-login:disabled {
+    background: #a9c4f0;
+  }
+
+  .puzzle-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    transition: background 0.28s ease;
+  }
+
+  .puzzle-overlay.show {
+    display: flex;
+  }
+
+  .puzzle-overlay.open {
+    background: rgba(0,0,0,0.45);
+  }
+
+  .puzzle-modal {
+    background: #fffef2;
+    border-radius: 10px;
+    border-top: 2px solid #3b7ef0;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    padding: 1.25rem;
+    width: 342px;
+    max-width: 92vw;
+    transform: scale(0.05);
+    opacity: 0;
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease;
+  }
+
+  .puzzle-modal.open {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .puzzle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .puzzle-close {
+    border: none;
+    background: none;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+  }
+
+  .puzzle-close:hover { color: #333; }
+
+  .puzzle-canvas-wrap {
+    position: relative;
+    width: 310px;
+    height: 155px;
+    margin: 0 auto;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .puzzle-canvas-wrap.shake {
+    animation: shake 0.4s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  .puzzle-canvas-wrap canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .puzzle-canvas-wrap.ready canvas {
+    opacity: 1;
+  }
+
+  .puzzle-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(90deg, #eef1f4 25%, #f7f8fa 37%, #eef1f4 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.1s ease infinite;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+    z-index: 3;
+  }
+
+  .puzzle-canvas-wrap.ready .puzzle-loading {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  .puzzle-spinner {
+    width: 26px;
+    height: 26px;
+    border: 3px solid #cfd6dd;
+    border-top-color: #3b7ef0;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .puzzle-loading-text {
+    font-size: 0.78rem;
+    color: #8a929a;
+  }
+
+  .puzzle-success {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    background: rgba(40, 167, 69, 0.92);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  .puzzle-success.show {
+    transform: translateY(0);
+  }
+
+  .puzzle-success svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .puzzle-refresh {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .puzzle-refresh:hover { background: rgba(0,0,0,0.65); }
+
+  .puzzle-hint {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 0.7rem;
+    color: #fff;
+    background: rgba(0,0,0,0.35);
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 2;
+  }
+
+  .slider-track {
+    position: relative;
+    width: 310px;
+    height: 40px;
+    margin: 0.75rem auto 0;
+    background: #eef1f4;
+    border: 1px solid #dde2e7;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .slider-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: #cfe2ff;
+    transition: background 0.2s ease;
+  }
+
+  .slider-track.success .slider-fill {
+    background: #c9f2d6;
+  }
+
+  .slider-label {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6c757d;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .slider-handle {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #dde2e7;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    z-index: 2;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    font-size: 1rem;
+    color: #3b7ef0;
+  }
+
+  .slider-handle:active { cursor: grabbing; }
+
+  .slider-track.success .slider-handle {
+    color: #28a745;
+    border-color: #28a745;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <h4 class="text-center mb-4 fw-bold">Login</h4>
+
+  <form id="loginForm" novalidate>
+    <div class="input-group mb-3">
+      <input type="email" class="form-control" id="email" placeholder="Email" required>
+    </div>
+
+    <div class="input-group mb-3">
+      <input type="password" class="form-control" id="password" placeholder="Password" required>
+      <span class="input-group-text" id="togglePassword">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8ZM1.173 8a13.13 13.13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8Z"/>
+          <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0Z"/>
+        </svg>
+      </span>
+    </div>
+
+    <div class="captcha-box mb-3" id="captchaBox">
+      <span class="captcha-text" id="captchaText">Click to verify</span>
+      <svg id="captchaIcon" class="captcha-icon text-secondary" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41Zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9Z"/>
+        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3ZM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1Z"/>
+      </svg>
+    </div>
+
+    <button type="submit" class="btn btn-login btn-primary w-100 text-white" id="loginBtn" disabled>Login</button>
+  </form>
+</div>
+
+<div class="puzzle-overlay" id="puzzleOverlay">
+  <div class="puzzle-modal" id="puzzleModal">
+    <div class="puzzle-header">
+      <span>Slide to complete the puzzle</span>
+      <button class="puzzle-close" id="puzzleClose" type="button">&times;</button>
+    </div>
+
+    <div class="puzzle-canvas-wrap" id="puzzleWrap">
+      <canvas id="bgCanvas" width="310" height="155"></canvas>
+      <canvas id="pieceCanvas" width="310" height="155"></canvas>
+      <!-- <span class="puzzle-hint" id="puzzleHint">Puzzle Captcha</span> -->
+      <button class="puzzle-refresh" id="puzzleRefresh" type="button" title="Bagong puzzle">&#8635;</button>
+      <div class="puzzle-loading" id="puzzleLoading">
+        <div class="puzzle-spinner"></div>
+        <span class="puzzle-loading-text">Naglo-load ng puzzle...</span>
+      </div>
+      <div class="puzzle-success" id="puzzleSuccess">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-3.97-3.03a.75.75 0 0 0-1.08.02L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05Z"/>
+        </svg>
+        <span>Complete! Well done</span>
+      </div>
+    </div>
+
+    <div class="slider-track" id="sliderTrack">
+      <div class="slider-fill" id="sliderFill"></div>
+      <span class="slider-label" id="sliderLabel">Hawakan at kaladkarin pakanan</span>
+      <div class="slider-handle" id="sliderHandle">&raquo;</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const togglePassword = document.getElementById('togglePassword');
+  const password = document.getElementById('password');
+  togglePassword.addEventListener('click', () => {
+    password.type = password.type === 'password' ? 'text' : 'password';
+  });
+
+  const captchaBox = document.getElementById('captchaBox');
+  const captchaText = document.getElementById('captchaText');
+  const captchaIcon = document.getElementById('captchaIcon');
+  const loginBtn = document.getElementById('loginBtn');
+  let verified = false;
+
+  captchaBox.addEventListener('click', () => {
+    if (verified || captchaBox.classList.contains('loading')) return;
+
+    captchaBox.classList.add('loading');
+    captchaIcon.classList.add('spinning');
+    captchaText.textContent = 'Verifying...';
+
+    setTimeout(() => {
+      captchaBox.classList.remove('loading');
+      captchaIcon.classList.remove('spinning');
+      captchaText.textContent = 'Click to verify';
+      openPuzzle();
+    }, 900);
+  });
+
+  function markCaptchaVerified() {
+    verified = true;
+    captchaBox.classList.add('verified');
+    captchaText.innerHTML = '&#10003; Verified';
+    captchaIcon.classList.remove('text-secondary');
+    captchaIcon.classList.add('text-success');
+    loginBtn.disabled = false;
+  }
+
+  const puzzleOverlay = document.getElementById('puzzleOverlay');
+  const puzzleModal = document.getElementById('puzzleModal');
+  const puzzleClose = document.getElementById('puzzleClose');
+  const puzzleWrap = document.getElementById('puzzleWrap');
+  const puzzleSuccess = document.getElementById('puzzleSuccess');
+  const puzzleRefresh = document.getElementById('puzzleRefresh');
+  const bgCanvas = document.getElementById('bgCanvas');
+  const pieceCanvas = document.getElementById('pieceCanvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const pieceCtx = pieceCanvas.getContext('2d');
+
+  const sliderTrack = document.getElementById('sliderTrack');
+  const sliderFill = document.getElementById('sliderFill');
+  const sliderHandle = document.getElementById('sliderHandle');
+  const sliderLabel = document.getElementById('sliderLabel');
+
+  const W = 310, H = 155, PIECE = 42, RAD = 9, TOLERANCE = 6;
+  const HANDLE = 40, MAX_X = W - PIECE;
+
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = W;
+  offCanvas.height = H;
+  const offCtx = offCanvas.getContext('2d');
+
+  let gapX = 0, gapY = 0, curX = 0, dragging = false, puzzleSolved = false;
+
+  function piecePath(ctx, x, y) {
+    const l = PIECE, r = RAD;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.arc(x + l / 2, y - r + 2, r, 0.72 * Math.PI, 2.26 * Math.PI);
+    ctx.lineTo(x + l, y);
+    ctx.arc(x + l + r - 2, y + l / 2, r, 1.21 * Math.PI, 2.78 * Math.PI);
+    ctx.lineTo(x + l, y + l);
+    ctx.lineTo(x, y + l);
+    ctx.arc(x + r - 2, y + l / 2, r + 0.4, 2.76 * Math.PI, 1.24 * Math.PI, true);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+  }
+
+  function randomColor() {
+    const palettes = [
+      ['#3b7ef0', '#8ec5ff', '#ffe27a'],
+      ['#ff8a65', '#ffd166', '#fff3b0'],
+      ['#6a4c93', '#b185db', '#f2d1ff'],
+      ['#1b9c85', '#5ee7b0', '#d7fff2'],
+      ['#e0526b', '#ff9eb0', '#ffe1e6']
+    ];
+    return palettes[Math.floor(Math.random() * palettes.length)];
+  }
+
+  function paintBackground(ctx) {
+    const [c1, c2, c3] = randomColor();
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, c1);
+    grad.addColorStop(1, c2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      const rx = Math.random() * W;
+      const ry = Math.random() * H;
+      const rr = 15 + Math.random() * 35;
+      ctx.fillStyle = c3;
+      ctx.globalAlpha = 0.25 + Math.random() * 0.25;
+      ctx.arc(rx, ry, rr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function generatePuzzle() {
+    puzzleSolved = false;
+    curX = 0;
+    puzzleSuccess.classList.remove('show');
+    dragging = false;
+
+    paintBackground(offCtx);
+
+    gapX = Math.round(80 + Math.random() * (W - PIECE - 100));
+    gapY = Math.round(18 + Math.random() * (H - PIECE - 36));
+
+    drawBackground();
+    drawPiece();
+    resetSlider();
+  }
+
+  function drawBackground() {
+    bgCtx.clearRect(0, 0, W, H);
+    bgCtx.drawImage(offCanvas, 0, 0);
+
+    bgCtx.save();
+    piecePath(bgCtx, gapX, gapY);
+    bgCtx.clip();
+    bgCtx.fillStyle = 'rgba(0,0,0,0.45)';
+    bgCtx.fillRect(gapX - RAD - 2, gapY - RAD - 2, PIECE + (RAD + 2) * 2, PIECE + (RAD + 2) * 2);
+    bgCtx.restore();
+
+    bgCtx.save();
+    piecePath(bgCtx, gapX, gapY);
+    bgCtx.lineWidth = 2;
+    bgCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+    bgCtx.stroke();
+    bgCtx.restore();
+  }
+
+  function drawPiece() {
+    pieceCtx.clearRect(0, 0, W, H);
+    pieceCtx.save();
+    piecePath(pieceCtx, curX, gapY);
+    pieceCtx.clip();
+    pieceCtx.drawImage(offCanvas, curX - gapX, 0);
+    pieceCtx.restore();
+
+    pieceCtx.save();
+    piecePath(pieceCtx, curX, gapY);
+    pieceCtx.lineWidth = 2;
+    pieceCtx.strokeStyle = '#fff';
+    pieceCtx.stroke();
+    pieceCtx.restore();
+  }
+
+  function resetSlider() {
+    sliderTrack.classList.remove('success');
+    sliderFill.style.width = '0px';
+    sliderHandle.style.left = '0px';
+    sliderHandle.innerHTML = '&raquo;';
+    sliderLabel.textContent = 'Hawakan at kaladkarin pakanan';
+  }
+
+  function setModalOrigin() {
+    // measure the modal at its natural (unscaled) size/position first
+    puzzleModal.style.transition = 'none';
+    const heldTransform = puzzleModal.style.transform;
+    puzzleModal.style.transform = 'none';
+    const modalRect = puzzleModal.getBoundingClientRect();
+    const btnRect = captchaBox.getBoundingClientRect();
+
+    const originX = (btnRect.left + btnRect.width / 2) - modalRect.left;
+    const originY = (btnRect.top + btnRect.height / 2) - modalRect.top;
+    puzzleModal.style.transformOrigin = originX + 'px ' + originY + 'px';
+
+    puzzleModal.style.transform = heldTransform;
+    void puzzleModal.offsetWidth; // force reflow
+    puzzleModal.style.transition = '';
+  }
+
+  function openPuzzle() {
+    puzzleWrap.classList.remove('ready');
+    puzzleOverlay.classList.add('show');
+    setModalOrigin();
+
+    requestAnimationFrame(() => {
+      puzzleOverlay.classList.add('open');
+      puzzleModal.classList.add('open');
+    });
+
+    generatePuzzle();
+
+    setTimeout(() => {
+      puzzleWrap.classList.add('ready');
+    }, 550);
+  }
+
+  function closePuzzle() {
+    setModalOrigin();
+    puzzleOverlay.classList.remove('open');
+    puzzleModal.classList.remove('open');
+    setTimeout(() => {
+      puzzleOverlay.classList.remove('show');
+    }, 320);
+  }
+
+  puzzleClose.addEventListener('click', closePuzzle);
+  puzzleRefresh.addEventListener('click', () => {
+    puzzleWrap.classList.remove('ready');
+    generatePuzzle();
+    setTimeout(() => {
+      puzzleWrap.classList.add('ready');
+    }, 450);
+  });
+
+  puzzleOverlay.addEventListener('click', (e) => {
+    if (e.target === puzzleOverlay) closePuzzle();
+  });
+
+  function startDrag(clientX) {
+    if (puzzleSolved) return;
+    dragging = true;
+    sliderHandle.dataset.startX = clientX;
+    sliderHandle.dataset.originLeft = sliderHandle.offsetLeft;
+  }
+
+  function moveDrag(clientX) {
+    if (!dragging || puzzleSolved) return;
+    const startX = parseFloat(sliderHandle.dataset.startX);
+    const originLeft = parseFloat(sliderHandle.dataset.originLeft);
+    let delta = clientX - startX;
+    let newLeft = originLeft + delta;
+    newLeft = Math.max(0, Math.min(newLeft, W - HANDLE));
+
+    sliderHandle.style.left = newLeft + 'px';
+    sliderFill.style.width = (newLeft + HANDLE / 2) + 'px';
+
+    curX = Math.round((newLeft / (W - HANDLE)) * MAX_X);
+    drawPiece();
+  }
+
+  function endDrag() {
+    if (!dragging || puzzleSolved) return;
+    dragging = false;
+
+    if (Math.abs(curX - gapX) <= TOLERANCE) {
+      solvePuzzle();
+    } else {
+      failPuzzle();
+    }
+  }
+
+  function solvePuzzle() {
+    puzzleSolved = true;
+    curX = gapX;
+    drawPiece();
+
+    const finalLeft = (gapX / MAX_X) * (W - HANDLE);
+    sliderHandle.style.left = finalLeft + 'px';
+    sliderFill.style.width = (finalLeft + HANDLE / 2) + 'px';
+    sliderTrack.classList.add('success');
+    sliderHandle.innerHTML = '&#10003;';
+    sliderLabel.textContent = 'Ayos!';
+
+    setTimeout(() => {
+      puzzleSuccess.classList.add('show');
+    }, 150);
+
+    setTimeout(() => {
+      closePuzzle();
+      markCaptchaVerified();
+    }, 1000);
+  }
+
+  function failPuzzle() {
+    puzzleWrap.classList.add('shake');
+    sliderLabel.textContent = 'Subukan ulit';
+    setTimeout(() => {
+      puzzleWrap.classList.remove('shake');
+      puzzleWrap.classList.remove('ready');
+      generatePuzzle();
+      setTimeout(() => {
+        puzzleWrap.classList.add('ready');
+      }, 400);
+    }, 400);
+  }
+
+  sliderHandle.addEventListener('mousedown', (e) => startDrag(e.clientX));
+  document.addEventListener('mousemove', (e) => moveDrag(e.clientX));
+  document.addEventListener('mouseup', endDrag);
+
+  sliderHandle.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (dragging) moveDrag(e.touches[0].clientX);
+  }, { passive: true });
+  document.addEventListener('touchend', endDrag);
+
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!verified) {
+      alert('Paki-verify muna ang captcha.');
+      return;
+    }
+    alert('Naka-login ka na! (demo lang)');
+  });
+</script>
+
+</body>
+</html>

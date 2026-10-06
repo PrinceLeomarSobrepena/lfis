@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floating Chat</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+    background:#f5f5f5;
+}
+
+/* Floating Button */
+.chat-btn{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    background:#0d6efd;
+    color:#fff;
+    border:none;
+    font-size:28px;
+    box-shadow:0 5px 15px rgba(0,0,0,.3);
+    z-index:9999;
+}
+
+/* Chat Box */
+.chat-box{
+    position:fixed;
+    bottom:95px;
+    right:20px;
+    width:350px;
+    display:none;
+    z-index:9999;
+}
+
+.chat-body{
+    height:350px;
+    overflow-y:auto;
+    background:#f8f9fa;
+}
+</style>
+</head>
+<body>
+
+<!-- Floating Button -->
+<button class="chat-btn" id="chatToggle">
+    💬
+</button>
+
+<!-- Chat Window -->
+<div class="card shadow chat-box" id="chatBox">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <strong>Chat Support</strong>
+
+        <button class="btn btn-sm btn-light" id="closeChat">
+            ✖
+        </button>
+    </div>
+
+    <div class="card-body chat-body" id="messages">
+
+        <div class="mb-2">
+            <span class="badge bg-secondary">Bot</span><br>
+            Hello! Paano kita matutulungan?
+        </div>
+
+    </div>
+
+    <div class="card-footer">
+        <div class="input-group">
+            <input type="text" class="form-control" id="messageInput" placeholder="Type message...">
+            <button class="btn btn-primary" id="sendBtn">
+                Send
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const chatBtn = document.getElementById("chatToggle");
+const chatBox = document.getElementById("chatBox");
+const closeChat = document.getElementById("closeChat");
+
+chatBtn.onclick = () => {
+    chatBox.style.display =
+        chatBox.style.display === "block"
+        ? "none"
+        : "block";
+};
+
+closeChat.onclick = () => {
+    chatBox.style.display = "none";
+};
+
+document.getElementById("sendBtn").onclick = sendMessage;
+
+document.getElementById("messageInput").addEventListener("keypress",function(e){
+    if(e.key==="Enter"){
+        sendMessage();
+    }
+});
+
+function sendMessage(){
+
+    let input=document.getElementById("messageInput");
+
+    if(input.value.trim()=="") return;
+
+    let messages=document.getElementById("messages");
+
+    messages.innerHTML+=`
+        <div class="text-end mb-2">
+            <span class="badge bg-primary">You</span><br>
+            ${input.value}
+        </div>
+    `;
+
+    // Sample bot reply
+    setTimeout(()=>{
+        messages.innerHTML+=`
+            <div class="mb-2">
+                <span class="badge bg-secondary">Bot</span><br>
+                Natanggap ko ang message mo.
+            </div>
+        `;
+        messages.scrollTop=messages.scrollHeight;
+    },500);
+
+    input.value="";
+    messages.scrollTop=messages.scrollHeight;
+}
+</script>
+
+</body>
+</html>

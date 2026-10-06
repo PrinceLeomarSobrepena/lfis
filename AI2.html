@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Chat</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --ink: #111213;
+            --ink-soft: #2A2B2E;
+            --bg: #FFFFFF;
+            --surface: #F4F4FF5;
+            --border: #E7E7E9;
+            --muted: #8A8A8E;
+            --accent: #10A37F;
+            --accent-dark: #0C8A6A;
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: #EDEDEF;
+            color: var(--ink);
+        }
+
+        /* Floating Button */
+
+        .chat-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            cursor: pointer;
+            z-index: 9999;
+            transition: .15s;
+            font-size: 24px;
+        }
+
+        .chat-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .chat-toggle .icon-close {
+            display: none;
+        }
+
+        .chat-toggle.open .icon-chat {
+            display: none;
+        }
+
+        .chat-toggle.open .icon-close {
+            display: block;
+        }
+
+        /* Chat Window */
+
+        .chat-window {
+            position: fixed;
+            bottom: 92px;
+            right: 24px;
+            width: 380px;
+            max-width: calc(100vw - 32px);
+            height: min(600px, calc(100vh - 130px));
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+
+            opacity: 0;
+            transform: scale(.92);
+            pointer-events: none;
+            transition: .18s;
+        }
+
+        .chat-window.open {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chat-header-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .chat-status .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .msg {
+            display: flex;
+            gap: 10px;
+        }
+
+        .msg.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .bubble {
+            font-size: 14.5px;
+            line-height: 1.55;
+            padding: 10px 14px;
+            border-radius: 14px;
+            max-width: 78%;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .msg.bot .bubble {
+            background: #F4F4F5;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.user .bubble {
+            background: #111213;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Typing */
+
+        .typing .bubble {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .dot-t {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+            animation: bounce 1s infinite;
+        }
+
+        .dot-t:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .dot-t:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        @keyframes bounce {
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: .4;
+            }
+
+            50% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        /* Input */
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #F4F4F5;
+            outline: none;
+        }
+
+        .send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="chat-toggle" id="chatToggle">
+        <i class="bi bi-chat-dots-fill icon-chat"></i>
+        <i class="bi bi-x-lg icon-close"></i>
+    </button>
+
+    <div class="chat-window" id="chatBox">
+
+        <div class="chat-header">
+
+            <div class="chat-header-info">
+
+                <div class="chat-avatar">
+                    <i class="bi bi-stars"></i>
+                </div>
+
+                <div>
+                    <div class="chat-title">Chat Support</div>
+                    <div class="chat-status">
+                        <span class="dot"></span>
+                        Online
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="icon-btn" id="closeChat">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+        </div>
+
+        <div class="chat-messages" id="messages">
+
+            <div class="msg bot">
+
+                <div class="avatar">
+                    <i class="bi bi-stars"></i>
+                </div>
+
+                <div class="bubble">
+                    Hello! Paano kita matutulungan?
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="chat-input-row">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Message..."
+                autocomplete="off">
+
+            <button class="send-btn" id="sendBtn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+        const chatBtn = document.getElementById("chatToggle");
+        const chatBox = document.getElementById("chatBox");
+        const closeChat = document.getElementById("closeChat");
+        const input = document.getElementById("messageInput");
+        const messages = document.getElementById("messages");
+
+        function openChat() {
+            chatBox.classList.add("open");
+            chatBtn.classList.add("open");
+            setTimeout(() => input.focus(), 180);
+        }
+
+        function closeChatWindow() {
+            chatBox.classList.remove("open");
+            chatBtn.classList.remove("open");
+        }
+
+        chatBtn.onclick = () => {
+            chatBox.classList.contains("open") ? closeChatWindow() : openChat();
+        };
+
+        closeChat.onclick = closeChatWindow;
+
+        document.getElementById("sendBtn").onclick = sendMessage;
+
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        const botAvatar = `
+<div class="avatar">
+<i class="bi bi-stars"></i>
+</div>
+`;
+
+        function sendMessage() {
+
+            let text = input.value.trim();
+
+            if (text == "") return;
+
+            messages.innerHTML += `
+<div class="msg user">
+<div class="bubble">${text}</div>
+</div>
+`;
+
+            input.value = "";
+
+            messages.scrollTop = messages.scrollHeight;
+
+            messages.innerHTML += `
+<div class="msg bot typing" id="typingIndicator">
+${botAvatar}
+<div class="bubble">
+<span class="dot-t"></span>
+<span class="dot-t"></span>
+<span class="dot-t"></span>
+</div>
+</div>
+`;
+
+            messages.scrollTop = messages.scrollHeight;
+
+            setTimeout(() => {
+
+                document.getElementById("typingIndicator").remove();
+
+                messages.innerHTML += `
+<div class="msg bot">
+${botAvatar}
+<div class="bubble">
+Natanggap ko ang message mo.
+</div>
+</div>
+`;
+
+                messages.scrollTop = messages.scrollHeight;
+
+            }, 900);
+
+        }
+    </script>
+
+</body>
+</html>

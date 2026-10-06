@@ -1,0 +1,63 @@
+STEP 1 - Database
+ALTER TABLE lost_found
+ADD resolved_reference VARCHAR(50) DEFAULT NULL;
+
+STEP 2 - adminLostFoundMatches.php
+Hanapin ito
+$lost_id = $_POST['lost_id'];
+$found_id = $_POST['found_id'];
+
+Pagkatapos nito, idagdag ito:
+
+$resolved_reference = 'RES-' . date('YmdHis');
+
+Hanapin ito
+$update = $conn->prepare("
+    UPDATE lost_found
+    SET is_resolved = 1
+    WHERE id IN (?, ?)
+");
+
+$update->bind_param("ii", $lost_id, $found_id);
+$update->execute();
+
+Palitan lang ng:
+
+$update = $conn->prepare("
+    UPDATE lost_found
+    SET
+        is_resolved = 1,
+        resolved_reference = ?
+    WHERE id IN (?, ?)
+");
+
+$update->bind_param(
+    "sii",
+    $resolved_reference,
+    $lost_id,
+    $found_id
+);
+
+$update->execute();
+
+Wala nang ibang babaguhin sa adminLostFoundMatches.php.
+
+STEP 3 - adminLostFoundList.php
+Hanapin ang table header
+<th>Claim Status</th>
+<th>Created At</th>
+
+Gawin itong
+
+<th>Claim Status</th>
+<th>Resolved Reference</th>
+<th>Created At</th>
+
+Hanapin ang Claim Status <td>
+<td>
+    <?=
+        !empty($row['resolved_reference'])
+        ? htmlspecialchars($row['resolved_reference'])
+        : '--'
+    ?>
+</td>

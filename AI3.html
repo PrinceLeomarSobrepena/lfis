@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found Assistant</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+
+        .chat-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #111213;
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            cursor: pointer;
+            z-index: 9999;
+            transition: .15s;
+            font-size: 24px;
+        }
+
+        .chat-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .chat-toggle .icon-close {
+            display: none;
+        }
+
+        .chat-toggle.open .icon-chat {
+            display: none;
+        }
+
+        .chat-toggle.open .icon-close {
+            display: block;
+        }
+
+        /*============ Chat Window ============*/
+        .chat-window {
+            position: fixed;
+            bottom: 92px;
+            right: 24px;
+            width: 380px;
+            max-width: calc(100vw - 32px);
+            height: min(600px, calc(100vh - 130px));
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #E7E7E9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+
+            opacity: 0;
+            transform: scale(.92);
+            pointer-events: none;
+            transition: .18s;
+        }
+
+        .chat-window.open {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 18px;
+            border-bottom: 1px solid #E7E7E9;
+        }
+
+        .chat-header-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #111213;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .chat-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            font-size: 12px;
+            color: #8A8A8E;
+        }
+
+        .chat-status .dot {
+            width: 7px;
+            height: 7px;
+            background: #10A37F;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .icon-btn-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #8A8A8E;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .msg {
+            display: flex;
+            gap: 10px;
+        }
+
+        .msg.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #111213;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .bubble {
+            font-size: 14.5px;
+            line-height: 1.55;
+            padding: 10px 14px;
+            border-radius: 14px;
+            max-width: 78%;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .bubble ul {
+            margin: 6px 0;
+            padding-left: 18px;
+        }
+
+        .msg.bot .bubble {
+            background: #F4F4F5;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.user .bubble {
+            background: #111213;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Typing */
+        .typing .bubble {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .dot-t {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+            animation: bounce 1s infinite;
+        }
+
+        .dot-t:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .dot-t:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+                opacity: .4;
+            }
+
+            50% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        /* Input */
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid #E7E7E9;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 999px;
+            border: 1px solid #E7E7E9;
+            background: #F4F4F5;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: #111213;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="chat-toggle" id="chatToggle">
+        <i class="bi bi-chat icon-chat"></i>
+        <i class="bi bi-x-lg icon-close"></i>
+    </button>
+
+    <div class="chat-window" id="chatBox">
+
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">
+                    <i class="bi bi-search"></i>
+                </div>
+                <div>
+                    <div class="chat-title">Lost &amp; Found Assistant</div>
+                    <div class="chat-status">
+                        <span class="dot"></span>
+                        Online
+                    </div>
+                </div>
+            </div>
+
+            <button class="icon-btn-close" id="closeChat">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="chat-messages" id="messages">
+            <div class="msg bot">
+                <div class="avatar">
+                    <i class="bi bi-search"></i>
+                </div>
+                <div class="bubble">
+                    Hello! 👋<br><br>
+                    I can help you with:
+                    <ul>
+                        <li>How to report a lost item</li>
+                        <li>How to claim a found item</li>
+                        <li>Where the Lost and Found Office is located</li>
+                        <li>Office schedule</li>
+                        <li>How to view Lost &amp; Found items</li>
+                    </ul>
+                    Try asking:<br><br>
+                    • How do I report a lost item?<br>
+                    • Where is the Lost and Found Office?<br>
+                    • How do I claim my item?<br>
+                    • Can I view found items?
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-row">
+            <input type="text" id="messageInput" placeholder="Ask something..." autocomplete="off" maxlength="70">
+            <button class="send-btn" id="sendBtn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* ---------------------------------------------------------
+           Toggle / open / close window behavior
+        --------------------------------------------------------- */
+        const chatBtn = document.getElementById("chatToggle");
+        const chatBox = document.getElementById("chatBox");
+        const closeChat = document.getElementById("closeChat");
+        const input = document.getElementById("messageInput");
+        const messages = document.getElementById("messages");
+
+        function openChat() {
+            chatBox.classList.add("open");
+            chatBtn.classList.add("open");
+            setTimeout(() => input.focus(), 180);
+        }
+
+        function closeChatWindow() {
+            chatBox.classList.remove("open");
+            chatBtn.classList.remove("open");
+        }
+
+        chatBtn.onclick = () => {
+            chatBox.classList.contains("open") ? closeChatWindow() : openChat();
+        };
+
+        closeChat.onclick = closeChatWindow;
+
+        document.getElementById("sendBtn").onclick = sendMessage;
+
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        const botAvatar = `
+            <div class="avatar">
+            <i class="bi bi-search"></i>
+            </div>
+        `;
+
+        /* ---------------------------------------------------------
+           Smarter intent engine for the Lost & Found Assistant.
+           Rule-based (no external AI API), but uses:
+           - multiple keyword/synonym patterns per intent
+           - simple typo tolerance (Levenshtein distance)
+           - greeting / thanks / goodbye handling
+           - scoring so the BEST matching intent wins,
+             instead of stopping at the first keyword found
+        --------------------------------------------------------- */
+
+        const intents = [
+            {
+                name: "greeting",
+                // patterns: ["hi", "hello", "hey", "kamusta", "kumusta", "musta", "good morning", "good afternoon", "good evening", "yo"],
+                patterns: ["hi", "hello", "hey", "heyy", "hii", "hiii", "helo", "helloo", "yo", "yow", "yooo", "sup", "wassup", "wazzup", "watzap", "whatsup", "what's up", "whats up", "waddup", "wadup", "wsp", "wsup", "kamusta", "kumusta", "kamusta po", "kumusta po", "musta", "musta po", "uy", "oyi", "oy", "hoi", "hoy", "good morning", "gm", "good afternoon", "ga", "good evening", "ge", "good day", "morning", "afternoon", "evening", "hi there", "hello there", "hey there", "greetings", "howdy", "hiya", "aloha", "bonjour", "ciao", "namaste", "hola", "halo", "haloo", "ping", "test", "testing", "anyone", "anyone there", "are you there", "bot", "chat", "knock knock"],
+                answer: `
+                    Hello there! 👋 How can I help you today?<br><br>
+                    You can ask me about reporting a lost item, claiming an item, office location, office hours, or viewing lost and found items.
+                `
+            },
+            {
+                name: "thanks",
+                // patterns: ["thank you", "thanks", "salamat", "ty", "thx"],
+                patterns: ["thank you", "thanks", "salamat", "ty", "thx", "thank u", "tnx", "tysm", "thankyou", "thankyouu", "thanksss", "salamats", "salamat po", "maraming salamat", "maraming thanks", "much appreciated", "appreciate it", "i appreciate it", "big thanks", "cheers", "god bless", "godbless", "god bless you", "bless you", "stay blessed", "more blessings", "more power", "ingat", "keep safe", "thank you so much", "many thanks", "grateful", "you're a lifesaver", "you saved me", "you helped me a lot"],
+                answer: `
+                    You're welcome! 😊 Let me know if you have other questions about the Lost and Found Office.
+                `
+            },
+            {
+                name: "goodbye",
+                // patterns: ["bye", "goodbye", "paalam", "see you", "exit", "close"],
+                patterns: ["bye", "goodbye", "paalam", "see you", "exit", "close", "good bye", "bye bye", "babay", "babye", "ingat", "see ya", "see you later", "see you soon", "talk to you later", "hanggang sa muli", "hanggang muli", "alis na ako", "aalis na ako", "logout", "quit", "end chat", "close chat"],
+                answer: `
+                    Goodbye! 👋 Feel free to come back if you have more questions about lost or found items.
+                `
+            },
+            {
+                name: "report",
+                // patterns: ["report", "lost", "nawala", "nawawala", "ma report", "paano mag report", "nahulog", "naiwan", "missing item"],
+                patterns: ["report", "lost", "nawala", "nawawala", "ma report", "paano mag report", "nahulog", "naiwan", "missing item", "mag report", "magreklamo", "i-report", "ireport", "report lost item", "lost item", "lost belongings", "nawalang gamit", "nawalang bagay", "may nawala", "may nawawala", "hindi ko makita", "di ko makita", "hinahanap ko", "naiwan ko", "nakalimutan ko", "nalaglag", "nahulog ko", "wala na", "missing", "find my item"],
+                answer: `
+                    <b>How to Report a Lost Item</b><br><br>
+                    1. Go to the Lost and Found Office.<br>
+                    2. Inform the staff about your lost item.<br>
+                    3. Provide details such as color, brand, date, and location.<br>
+                    4. Staff will check if the item has already been turned in.<br>
+                    5. If not available, your report will be recorded.
+                `
+            },
+            {
+                name: "claim",
+                // patterns: ["claim", "kunin", "paano kunin", "how to get", "retrieve", "pick up", "pickup"],
+                patterns: ["claim", "kunin", "paano kunin", "how to get", "retrieve", "pick up", "pickup", "mag claim", "magclaim", "i-claim", "iclaim", "kuha", "kunin ko", "paano makuha", "saan kunin", "saan kukunin", "how to claim", "claim item", "claiming", "retrieve item", "get my item", "kuha ng gamit", "kunin ang gamit", "balikan", "pipickupin", "pick-up"],
+                answer: `
+                    <b>How to Claim an Item</b><br><br>
+                    1. Visit the Lost and Found Office.<br>
+                    2. Tell the staff the item you want to claim.<br>
+                    3. Provide proof of ownership.<br>
+                    4. Staff will verify your information.<br>
+                    5. Once verified, you may claim your item.
+                `
+            },
+            {
+                name: "location",
+              patterns: ["office", "location", "saan", "san", "address", "where is", "room", "building", "nasaan", "asan", "saan makikita", "saan ang", "lokasyon", "lugar", "pwesto", "pwede malaman ang location", "where are you", "where can i find", "exact location", "office location", "office address", "building location", "anong room", "anong building", "which room", "which building", "directions", "paano pumunta"],
+                answer: `
+                    The Lost and Found Office is located inside the Student Affairs Office.<br><br>
+                    Office Hours:<br>
+                    Monday - Friday<br>
+                    8:00 AM - 5:00 PM
+                `
+            },
+            {
+                name: "hours",
+                patterns: ["hours", "schedule", "open", "close time", "oras", "bukas", "sarado", "anong oras"],
+                answer: `
+                    <b>Office Hours</b><br><br>
+                    Monday - Friday<br>
+                    8:00 AM - 5:00 PM<br><br>
+                    Closed on weekends and holidays.
+                `
+            },
+            {
+                name: "view",
+                // patterns: ["view", "see items", "list of items", "found items", "found list", "tingnan"],
+                patterns: ["view", "see items", "list of items", "found items", "found list", "tingnan", "tingnan ang items", "tingnan ang listahan", "makita ang items", "makita ang listahan", "show items", "show list", "display items", "display list", "view items", "view list", "item list", "items list", "listahan ng items", "listahan ng gamit", "mga nahanap", "mga bagay na nahanap", "found objects", "lost and found list", "check items", "check list", "browse items", "search items", "available items", "available list", "ano ang mga nahanap", "ano mga items", "may nahanap ba", "may items ba", "saan makikita ang items", "patingin ng items", "pwede makita ang items", "pwede tingnan", "pakita ang listahan", "pakita items", "ipakita ang items", "i-view ang items"],
+                answer: `
+                    Students can only view Lost and Found items through the system.<br><br>
+                    If your item appears in the list, visit the Lost and Found Office to claim it.
+                `
+            },
+            {
+                name: "login",
+                patterns: ["login", "log in", "account", "sign in", "access", "admin"],
+                answer: `
+                    Students do not need to log in.<br><br>
+                    Only the Administrator and Staff have access to the system.
+                `
+            }
+        ];
+
+        const fallbackAnswer = `
+                Sorry, I only answer questions related to the Lost and Found System.<br><br>
+                You may ask about:
+                • Reporting a lost item<br>
+                • Claiming an item<br>
+                • Office location<br>
+                • Office hours<br>
+                • Viewing lost and found items<br>
+                • Student access
+            `
+        ;
+
+        // Levenshtein distance for basic typo tolerance
+        function levenshtein(a, b) {
+            const dp = Array.from(
+                { length: a.length + 1 },
+                (_, i) => [i, ...Array(b.length).fill(0)]
+            );
+
+            for (let j = 0; j <= b.length; j++) {
+                dp[0][j] = j;
+            }
+
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    if (a[i - 1] === b[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1];
+                    } else {
+                        dp[i][j] = 1 + Math.min(
+                            dp[i - 1][j],
+                            dp[i][j - 1],
+                            dp[i - 1][j - 1]
+                        );
+                    }
+                }
+            }
+
+            return dp[a.length][b.length];
+        }
+
+        // Checks if a word in the question loosely matches a pattern word
+        function fuzzyIncludes(text, pattern) {
+
+            if (text.includes(pattern)) {
+                return true;
+            }
+
+            const words = text.split(/\s+/);
+
+            return words.some(word => {
+
+                if (word.length < 4 || pattern.length < 4) {
+                    return false;
+                }
+
+                return levenshtein(word, pattern) <= 1; // allow 1 typo
+            });
+        }
+
+        function detectIntent(question) {
+
+            let bestIntent = null;
+            let bestScore = 0;
+
+            for (const intent of intents) {
+
+                let score = 0;
+
+                for (const pattern of intent.patterns) {
+
+                    if (fuzzyIncludes(question, pattern)) {
+                        score += pattern.split(" ").length; // longer/more specific phrase = higher weight
+                    }
+                }
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestIntent = intent;
+                }
+            }
+
+            return bestScore > 0 ? bestIntent : null;
+        }
+
+        function sendMessage() {
+
+            let text = input.value.trim();
+
+            if (text === "") return;
+
+            messages.innerHTML += `
+                <div class="msg user">
+                <div class="bubble">${text}</div>
+                </div>
+            `;
+
+            input.value = "";
+
+            messages.scrollTop = messages.scrollHeight;
+
+            messages.innerHTML += `
+                <div class="msg bot typing" id="typingIndicator">
+                ${botAvatar}
+                <div class="bubble">
+                <span class="dot-t"></span>
+                <span class="dot-t"></span>
+                <span class="dot-t"></span>
+                </div>
+                </div>
+            `;
+
+            messages.scrollTop = messages.scrollHeight;
+
+            let q = text.toLowerCase();
+            let matched = detectIntent(q);
+            let answer = matched ? matched.answer : fallbackAnswer;
+
+            setTimeout(() => {
+
+                document.getElementById("typingIndicator").remove();
+
+                messages.innerHTML += `
+                    <div class="msg bot">
+                    ${botAvatar}
+                    <div class="bubble">
+                    ${answer}
+                    </div>
+                    </div>
+                `;
+
+                messages.scrollTop = messages.scrollHeight;
+
+            }, 900);
+
+        }
+    </script>
+
+</body>
+</html>

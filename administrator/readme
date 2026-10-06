@@ -1,0 +1,341 @@
+<!-- TABLE -->
+<div class="table-card">
+    <div class="table-responsive-custom">
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" class="row-check">
+                    </th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Date</th>
+                    <th>Handled By</th>
+                    <th>Claim Status</th>
+                    <th>Item Details</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            <?php while ($row = $result->fetch_assoc()): ?>
+
+                <?php
+                /* ================= ITEM DETAILS ================= */
+
+                $itemDetails = '-';
+
+                if ($row['category'] === 'Cash') {
+
+                    $itemDetails =
+                        '₱ ' . number_format($row['cash_amount'], 2);
+
+                }
+
+                elseif ($row['category'] === 'Gadget') {
+
+                    $itemDetails =
+                        'Type: ' . ($row['gadget_type'] ?? '-') . '<br>' .
+                        'Brand: ' . ($row['gadget_brand'] ?? '-') . '<br>' .
+                        'Color: ' . ($row['gadget_color'] ?? '-') . '<br>' .
+                        'Features: ' . ($row['gadget_features'] ?? '-');
+
+                }
+
+                elseif ($row['category'] === 'Document') {
+
+                    $itemDetails =
+                        'Type: ' . ($row['document_type'] ?? '-') . '<br>' .
+                        'Name: ' . ($row['document_name'] ?? '-');
+
+                }
+
+                elseif ($row['category'] === 'Other') {
+
+                    $itemDetails =
+                        'Item: ' . ($row['other_description'] ?? '-');
+
+                }
+
+
+                /* ================= TYPE ================= */
+
+                if ($row['status'] === 'Found') {
+
+                    $typeText = 'Found Item';
+                    $typeClass = 'type-found-item';
+
+                } else {
+
+                    $typeText = 'Lost Report';
+                    $typeClass = 'type-lost-report';
+
+                }
+
+
+                /* ================= CLAIM STATUS ================= */
+
+                if ($row['is_claimed']) {
+
+                    $claimText = 'Claimed';
+                    $claimClass = 'status-claimed';
+
+                }
+
+                elseif ($row['is_resolved']) {
+
+                    $claimText = 'Resolved';
+                    $claimClass = 'status-matched';
+
+                }
+
+                else {
+
+                    $claimText = 'Pending';
+                    $claimClass = 'status-found';
+
+                }
+
+
+                /* ================= HANDLED BY ================= */
+
+                if (!empty($row['admin_resolved_first'])) {
+
+                    $handledBy =
+                        $row['admin_resolved_first'] . ' ' .
+                        $row['admin_resolved_last'];
+
+                }
+
+                elseif (!empty($row['staff_resolved_first'])) {
+
+                    $handledBy =
+                        $row['staff_resolved_first'] . ' ' .
+                        $row['staff_resolved_last'];
+
+                }
+
+                elseif (!empty($row['admin_released_first'])) {
+
+                    $handledBy =
+                        $row['admin_released_first'] . ' ' .
+                        $row['admin_released_last'];
+
+                }
+
+                elseif (!empty($row['staff_released_first'])) {
+
+                    $handledBy =
+                        $row['staff_released_first'] . ' ' .
+                        $row['staff_released_last'];
+
+                }
+
+                elseif (!empty($row['admin_created_first'])) {
+
+                    $handledBy =
+                        $row['admin_created_first'] . ' ' .
+                        $row['admin_created_last'];
+
+                }
+
+                elseif (!empty($row['staff_created_first'])) {
+
+                    $handledBy =
+                        $row['staff_created_first'] . ' ' .
+                        $row['staff_created_last'];
+
+                }
+
+                else {
+
+                    $handledBy = '--';
+
+                }
+                ?>
+
+                <tr>
+
+                    <!-- CHECKBOX -->
+                    <td>
+                        <input type="checkbox" class="row-check">
+                    </td>
+
+
+                    <!-- STATUS -->
+                    <td>
+                        <span class="badge-status <?= $typeClass === 'type-found-item' ? 'status-found' : 'status-matched' ?>">
+                            <?= htmlspecialchars($row['status']) ?>
+                        </span>
+                    </td>
+
+
+                    <!-- TYPE -->
+                    <td>
+                        <span class="badge-type <?= $typeClass ?>">
+                            <?= $typeText ?>
+                        </span>
+                    </td>
+
+
+                    <!-- CATEGORY -->
+                    <td>
+                        <?= htmlspecialchars($row['category']) ?>
+                    </td>
+
+
+                    <!-- LOCATION -->
+                    <td>
+                        <?= htmlspecialchars($row['reported_location']) ?>
+                    </td>
+
+
+                    <!-- DATE -->
+                    <td>
+                        <?= date('M d, Y', strtotime($row['created_at'])) ?>
+                        <br>
+                        <span style="color:#7C8A85; font-size:11px;">
+                            <?= date('h:i A', strtotime($row['created_at'])) ?>
+                        </span>
+                    </td>
+
+
+                    <!-- HANDLED BY -->
+                    <td>
+                        <?= htmlspecialchars($handledBy) ?>
+                    </td>
+
+
+                    <!-- CLAIM STATUS -->
+                    <td>
+                        <span class="badge-status <?= $claimClass ?>">
+                            <?= $claimText ?>
+                        </span>
+                    </td>
+
+
+                    <!-- ITEM DETAILS -->
+                    <td style="color:#7C8A85;">
+                        <?= $itemDetails ?>
+                    </td>
+
+
+                    <!-- ACTIONS -->
+                    <td>
+                        <div class="row-actions justify-content-end">
+
+                            <?php if ($row['status'] === 'Found' && !$row['is_claimed'] && !$row['is_resolved']): ?>
+
+                                <a
+                                    href="adminLostFoundClaim.php?id=<?= $row['id'] ?>"
+                                    class="action-btn claim"
+                                    title="Claim"
+                                >
+                                    <i class="bi bi-tag"></i>
+                                </a>
+
+                            <?php endif; ?>
+
+
+                            <?php if ($row['is_claimed']): ?>
+
+                                <a
+                                    href="adminLostFoundView.php?id=<?= $row['id'] ?>"
+                                    class="action-btn view"
+                                    title="View"
+                                >
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                            <?php endif; ?>
+
+
+                            <?php if (!$row['is_claimed'] && !$row['is_resolved']): ?>
+
+                                <a
+                                    href="adminLostFoundUpdate.php?id=<?= $row['id'] ?>"
+                                    class="action-btn edit"
+                                    title="Edit"
+                                >
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                            <?php endif; ?>
+
+
+                            <form
+                                method="POST"
+                                action="adminLostFoundDelete.php"
+                                style="display:inline;"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="id"
+                                    value="<?= $row['id'] ?>"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="action-btn delete"
+                                    title="Delete"
+                                    onclick="return confirm('Delete this item?')"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                            </form>
+
+                        </div>
+                    </td>
+
+                </tr>
+
+            <?php endwhile; ?>
+
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- TABLE FOOTER -->
+    <div class="table-footer">
+
+        <div class="table-footer-info">
+            Showing <b>1–8</b> of <b>142</b> items
+        </div>
+
+        <div class="pagination-custom">
+
+            <div class="page-btn">
+                <i class="bi bi-chevron-left"></i>
+            </div>
+
+            <div class="page-btn active">1</div>
+
+            <div class="page-btn">2</div>
+
+            <div class="page-btn">3</div>
+
+            <div class="page-btn">...</div>
+
+            <div class="page-btn">18</div>
+
+            <div class="page-btn">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

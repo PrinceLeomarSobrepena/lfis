@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Card</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+    :root{
+        --ink:#1C1D2E;
+        --muted:#6B6E85;
+        --hairline:#E7E7EF;
+        --surface:#FFFFFF;
+        --page:#F3F3F8;
+        --pending:#D97706;
+        --pending-bg:#FEF3E2;
+        --claimed:#0E9F6E;
+        --claimed-bg:#E5F9F1;
+    }
+
+    body{
+        background:var(--page);
+        font-family:'Inter',sans-serif;
+        color:var(--ink);
+    }
+
+    .eyebrow{
+        font-family:'Plus Jakarta Sans',sans-serif;
+        font-size:.68rem;
+        font-weight:700;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        color:var(--muted);
+        margin-bottom:.2rem;
+    }
+
+    /* card shell */
+    .item-card{
+        position:relative;
+        background:var(--surface);
+        border:1px solid var(--hairline);
+        border-radius:16px;
+        overflow:hidden;
+        transition:box-shadow .25s ease, transform .25s ease;
+        box-shadow:0 1px 2px rgba(28,29,46,.04);
+    }
+    .item-card:hover{
+        transform:translateY(-2px);
+        box-shadow:0 12px 28px rgba(28,29,46,.09);
+    }
+
+    /* left status rail — color encodes claim status at a glance */
+    .status-rail{
+        position:absolute;
+        left:0; top:0; bottom:0;
+        width:5px;
+    }
+    .status-rail.is-pending{ background:var(--pending); }
+    .status-rail.is-claimed{ background:var(--claimed); }
+
+    .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:.4rem;
+        font-family:'Plus Jakarta Sans',sans-serif;
+        font-weight:700;
+        font-size:.72rem;
+        letter-spacing:.02em;
+        padding:.32rem .65rem;
+        border-radius:999px;
+        line-height:1;
+    }
+    .pill::before{
+        content:'';
+        width:6px;
+        height:6px;
+        border-radius:50%;
+        display:inline-block;
+    }
+    .pill-pending{ background:var(--pending-bg); color:var(--pending); }
+    .pill-pending::before{ background:var(--pending); }
+    .pill-claimed{ background:var(--claimed-bg); color:var(--claimed); }
+    .pill-claimed::before{ background:var(--claimed); }
+
+    .divider-v{
+        width:1px;
+        align-self:stretch;
+        background:var(--hairline);
+    }
+
+    @media (max-width:768px){
+        .field-row{ text-align:left !important; }
+        .divider-v{ display:none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container py-5" style="max-width:640px;">
+
+    <div class="item-card">
+        <div class="status-rail is-claimed"></div>
+
+        <div class="card-body px-4 py-4 ps-md-5">
+            <div class="row align-items-center g-4 field-row">
+
+                <!-- Status -->
+                <div class="col-6 col-md">
+                    <div class="eyebrow">Status</div>
+                    <span class="pill pill-pending">Pending</span>
+                </div>
+
+                <div class="col-auto d-none d-md-block">
+                    <div class="divider-v"></div>
+                </div>
+
+                <!-- Claim Status -->
+                <div class="col-6 col-md">
+                    <div class="eyebrow">Claim Status</div>
+                    <span class="pill pill-claimed">Claimed</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

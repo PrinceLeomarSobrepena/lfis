@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found Assistant</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+    body{
+        background:#f4f6f9;
+    }
+
+    .chat-container{
+        max-width:900px;
+        margin:auto;
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .chat-header{
+        background:#0d6efd;
+        color:white;
+        padding:20px;
+        font-size:22px;
+        font-weight:bold;
+    }
+
+    .chat-box{
+        flex:1;
+        overflow-y:auto;
+        padding:20px;
+    }
+
+    .bot{
+        display:flex;
+        margin-bottom:20px;
+    }
+
+    .user{
+        display:flex;
+        justify-content:end;
+        margin-bottom:20px;
+    }
+
+    .bot .message{
+        background:white;
+        padding:15px;
+        border-radius:15px;
+        max-width:75%;
+        box-shadow:0 2px 8px rgba(0,0,0,.1);
+    }
+
+    .user .message{
+        background:#0d6efd;
+        color:white;
+        padding:15px;
+        border-radius:15px;
+        max-width:75%;
+    }
+
+    .chat-input{
+        padding:20px;
+        background:white;
+        border-top:1px solid #ddd;
+    }
+
+    </style>
+
+</head>
+<body>
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+            🤖 Lost & Found Assistant
+            <div style="font-size:14px;font-weight:normal;">
+                Ask me anything about the Lost and Found Office.
+            </div>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+
+            <div class="bot">
+                <div class="message">
+                    Hello! 👋<br><br>
+
+                    I can help you with:
+
+                    <ul>
+                        <li>How to report a lost item</li>
+                        <li>How to claim a found item</li>
+                        <li>Where the Lost and Found Office is located</li>
+                        <li>Office schedule</li>
+                        <li>How to view Lost & Found items</li>
+                    </ul>
+
+                    Try asking:
+                    <br><br>
+
+                    • How do I report a lost item?<br>
+                    • Where is the Lost and Found Office?<br>
+                    • How do I claim my item?<br>
+                    • Can I view found items?
+                </div>
+            </div>
+
+        </div>
+
+        <div class="chat-input">
+
+            <div class="input-group">
+
+                <input
+                    type="text"
+                    class="form-control"
+                    id="question"
+                    placeholder="Ask something...">
+
+                <button
+                    class="btn btn-primary"
+                    onclick="sendMessage()">
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+<script>
+
+    /* ---------------------------------------------------------
+       Smarter intent engine for the Lost & Found Assistant.
+       Rule-based (no external AI API), but uses:
+       - multiple keyword/synonym patterns per intent
+       - simple typo tolerance (Levenshtein distance)
+       - greeting / thanks / goodbye handling
+       - scoring so the BEST matching intent wins,
+         instead of stopping at the first keyword found
+    --------------------------------------------------------- */
+
+    const intents = [
+        {
+            name: "greeting",
+            patterns: ["hi", "hello", "hey", "kamusta", "kumusta", "musta", "good morning", "good afternoon", "good evening", "yo"],
+            answer: `
+                Hello there! 👋 How can I help you today?<br><br>
+                You can ask me about reporting a lost item, claiming an item, office location, office hours, or viewing lost and found items.
+            `
+        },
+        {
+            name: "thanks",
+            patterns: ["thank you", "thanks", "salamat", "ty", "thx"],
+            answer: `
+                You're welcome! 😊 Let me know if you have other questions about the Lost and Found Office.
+            `
+        },
+        {
+            name: "goodbye",
+            patterns: ["bye", "goodbye", "paalam", "see you", "exit", "close"],
+            answer: `
+                Goodbye! 👋 Feel free to come back if you have more questions about lost or found items.
+            `
+        },
+        {
+            name: "report",
+            patterns: ["report", "lost", "nawala", "nawawala", "ma report", "paano mag report", "nahulog", "naiwan", "missing item"],
+            answer: `
+                <b>How to Report a Lost Item</b><br><br>
+
+                1. Go to the Lost and Found Office.<br>
+                2. Inform the staff about your lost item.<br>
+                3. Provide details such as color, brand, date, and location.<br>
+                4. Staff will check if the item has already been turned in.<br>
+                5. If not available, your report will be recorded.
+            `
+        },
+        {
+            name: "claim",
+            patterns: ["claim", "kunin", "paano kunin", "how to get", "retrieve", "pick up", "pickup"],
+            answer: `
+                <b>How to Claim an Item</b><br><br>
+
+                1. Visit the Lost and Found Office.<br>
+                2. Tell the staff the item you want to claim.<br>
+                3. Provide proof of ownership.<br>
+                4. Staff will verify your information.<br>
+                5. Once verified, you may claim your item.
+            `
+        },
+        {
+            name: "location",
+            patterns: ["office", "location", "saan", "san", "address", "where is", "room", "building"],
+            answer: `
+                The Lost and Found Office is located inside the Student Affairs Office.<br><br>
+
+                Office Hours:<br>
+                Monday - Friday<br>
+                8:00 AM - 5:00 PM
+            `
+        },
+        {
+            name: "hours",
+            patterns: ["hours", "schedule", "open", "close time", "oras", "bukas", "sarado", "anong oras"],
+            answer: `
+                <b>Office Hours</b><br><br>
+
+                Monday - Friday<br>
+                8:00 AM - 5:00 PM<br><br>
+                Closed on weekends and holidays.
+            `
+        },
+        {
+            name: "view",
+            patterns: ["view", "see items", "list of items", "found items", "found list", "tingnan"],
+            answer: `
+                Students can only view Lost and Found items through the system.<br><br>
+                If your item appears in the list, visit the Lost and Found Office to claim it.
+            `
+        },
+        {
+            name: "login",
+            patterns: ["login", "log in", "account", "sign in", "access", "admin"],
+            answer: `
+                Students do not need to log in.<br><br>  
+                Only the Administrator and Staff have access to the system.
+            `
+        }
+    ];
+
+    const fallbackAnswer = `
+            Sorry, I only answer questions related to the Lost and Found System.<br><br>
+
+            You may ask about:
+
+            • Reporting a lost item<br>
+            • Claiming an item<br>
+            • Office location<br>
+            • Office hours<br>
+            • Viewing lost and found items<br>
+            • Student access
+        `
+    ;
+
+    // Levenshtein distance for basic typo tolerance
+    function levenshtein(a, b) {
+        const dp = Array.from(
+            { length: a.length + 1 },
+            (_, i) => [i, ...Array(b.length).fill(0)]
+        );
+
+        for (let j = 0; j <= b.length; j++) {
+            dp[0][j] = j;
+        }
+
+        for (let i = 1; i <= a.length; i++) {
+            for (let j = 1; j <= b.length; j++) {
+                if (a[i - 1] === b[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1];
+                } else {
+                    dp[i][j] = 1 + Math.min(
+                        dp[i - 1][j],
+                        dp[i][j - 1],
+                        dp[i - 1][j - 1]
+                    );
+                }
+            }
+        }
+
+        return dp[a.length][b.length];
+    }
+
+    // Checks if a word in the question loosely matches a pattern word
+    function fuzzyIncludes(text, pattern) {
+
+        if (text.includes(pattern)) {
+            return true;
+        }
+
+        const words = text.split(/\s+/);
+
+        return words.some(word => {
+
+            if (word.length < 4 || pattern.length < 4) {
+                return false;
+            }
+
+            return levenshtein(word, pattern) <= 1; // allow 1 typo
+        });
+    }
+
+    function detectIntent(question) {
+
+        let bestIntent = null;
+        let bestScore = 0;
+
+        for (const intent of intents) {
+
+            let score = 0;
+
+            for (const pattern of intent.patterns) {
+
+                if (fuzzyIncludes(question, pattern)) {
+                    score += pattern.split(" ").length; // longer/more specific phrase = higher weight
+                }
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestIntent = intent;
+            }
+        }
+
+        return bestScore > 0 ? bestIntent : null;
+    }
+
+    function sendMessage() {
+
+        let input = document.getElementById("question");
+
+        let question = input.value.trim();
+
+        if (question == "") return;
+
+        let chat = document.getElementById("chatBox");
+
+        chat.innerHTML += `
+            <div class="user">
+            <div class="message">
+            ${question}
+            </div>
+            </div>
+        `;
+
+        let q = question.toLowerCase();
+
+        let matched = detectIntent(q);
+
+        let answer = matched ? matched.answer : fallbackAnswer;
+
+        setTimeout(() => {
+
+            chat.innerHTML += `
+                <div class="bot">
+                <div class="message">
+                ${answer}
+                </div>
+                </div>
+            `;
+
+            chat.scrollTop = chat.scrollHeight;
+
+        }, 500);
+
+        input.value = "";
+
+    }
+
+    document.getElementById("question").addEventListener("keypress", function (e) {
+
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
