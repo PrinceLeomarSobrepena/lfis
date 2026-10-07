@@ -369,13 +369,110 @@ CREATE TABLE lost_found_deletions (
     category ENUM('Cash','Gadget','Document','Other') NOT NULL,
     status ENUM('Lost','Found') NOT NULL,
 
-   
     was_resolved TINYINT(1) NOT NULL DEFAULT 0,
     was_claimed TINYINT(1) NOT NULL DEFAULT 0,
     was_disposed TINYINT(1) NOT NULL DEFAULT 0,
 
     deleted_by INT NOT NULL,
     deleted_role ENUM('admin','staff') NOT NULL,
+    deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    -- SNAPSHOT NG ITEM (para makita pa rin sa Audit Trail kahit na-delete na)
+    image VARCHAR(255) DEFAULT NULL,
+    reported_location VARCHAR(255) DEFAULT NULL,
+
+    -- REPORTER
+    reporter_role ENUM('Student','Faculty','Visitor / Guest','Anonymous') DEFAULT NULL,
+    reporter_name VARCHAR(150) DEFAULT NULL,
+    reporter_id VARCHAR(50) DEFAULT NULL,
+    reporter_year VARCHAR(50) DEFAULT NULL,
+    reporter_department ENUM('BSA','CRIM','EDUC','HMTM','IT','RAD TECH / MED TECH') DEFAULT NULL,
+
+    -- CASH
+    cash_amount DECIMAL(10,2) DEFAULT NULL,
+
+    -- GADGET
+    gadget_type ENUM('Cell Phone','Laptop','Tablet','Smart watches','Audio Gadgets') DEFAULT NULL,
+    gadget_brand VARCHAR(100) DEFAULT NULL,
+    gadget_color VARCHAR(100) DEFAULT NULL,
+    gadget_description TEXT DEFAULT NULL,
+
+    -- DOCUMENT
+    document_type VARCHAR(100) DEFAULT NULL,
+    document_name VARCHAR(100) DEFAULT NULL,
+
+    -- OTHER
+    other_title VARCHAR(150) DEFAULT NULL,
+    other_description TEXT DEFAULT NULL,
+
+    -- ORIGINAL CREATOR
+    created_by INT DEFAULT NULL,
+    created_at DATETIME DEFAULT NULL
 );
+
+
+
+
+
+-- sa xampp to sa database
+DELIMITER $$
+
+CREATE TRIGGER trg_lost_found_log_edit
+AFTER UPDATE ON lost_found
+FOR EACH ROW
+BEGIN
+    IF NOT (
+        OLD.status              <=> NEW.status              AND
+        OLD.email               <=> NEW.email               AND
+        OLD.image               <=> NEW.image               AND
+        OLD.reporter_role       <=> NEW.reporter_role       AND
+        OLD.reporter_name       <=> NEW.reporter_name       AND
+        OLD.reporter_id         <=> NEW.reporter_id         AND
+        OLD.reporter_year       <=> NEW.reporter_year       AND
+        OLD.reporter_department <=> NEW.reporter_department AND
+        OLD.category            <=> NEW.category            AND
+        OLD.reported_location   <=> NEW.reported_location   AND
+        OLD.cash_amount         <=> NEW.cash_amount         AND
+        OLD.gadget_type         <=> NEW.gadget_type         AND
+        OLD.gadget_brand        <=> NEW.gadget_brand        AND
+        OLD.gadget_color        <=> NEW.gadget_color        AND
+        OLD.gadget_description  <=> NEW.gadget_description  AND
+        OLD.document_type       <=> NEW.document_type       AND
+        OLD.document_name       <=> NEW.document_name       AND
+        OLD.other_title         <=> NEW.other_title         AND
+        OLD.other_description   <=> NEW.other_description
+    ) THEN
+        INSERT INTO lost_found_edits (lost_found_id, old_data, new_data, edited_by, edited_at)
+        VALUES (
+            OLD.id,
+            JSON_OBJECT(
+                'status', IFNULL(OLD.status,''), 'email', IFNULL(OLD.email,''), 'image', IFNULL(OLD.image,''),
+                'reporter_role', IFNULL(OLD.reporter_role,''), 'reporter_name', IFNULL(OLD.reporter_name,''),
+                'reporter_id', IFNULL(OLD.reporter_id,''), 'reporter_year', IFNULL(OLD.reporter_year,''),
+                'reporter_department', IFNULL(OLD.reporter_department,''),
+                'category', IFNULL(OLD.category,''), 'reported_location', IFNULL(OLD.reported_location,''),
+                'cash_amount', IFNULL(CAST(OLD.cash_amount AS CHAR),''),
+                'gadget_type', IFNULL(OLD.gadget_type,''), 'gadget_brand', IFNULL(OLD.gadget_brand,''),
+                'gadget_color', IFNULL(OLD.gadget_color,''), 'gadget_description', IFNULL(OLD.gadget_description,''),
+                'document_type', IFNULL(OLD.document_type,''), 'document_name', IFNULL(OLD.document_name,''),
+                'other_title', IFNULL(OLD.other_title,''), 'other_description', IFNULL(OLD.other_description,'')
+            ),
+            JSON_OBJECT(
+                'status', IFNULL(NEW.status,''), 'email', IFNULL(NEW.email,''), 'image', IFNULL(NEW.image,''),
+                'reporter_role', IFNULL(NEW.reporter_role,''), 'reporter_name', IFNULL(NEW.reporter_name,''),
+                'reporter_id', IFNULL(NEW.reporter_id,''), 'reporter_year', IFNULL(NEW.reporter_year,''),
+                'reporter_department', IFNULL(NEW.reporter_department,''),
+                'category', IFNULL(NEW.category,''), 'reported_location', IFNULL(NEW.reported_location,''),
+                'cash_amount', IFNULL(CAST(NEW.cash_amount AS CHAR),''),
+                'gadget_type', IFNULL(NEW.gadget_type,''), 'gadget_brand', IFNULL(NEW.gadget_brand,''),
+                'gadget_color', IFNULL(NEW.gadget_color,''), 'gadget_description', IFNULL(NEW.gadget_description,''),
+                'document_type', IFNULL(NEW.document_type,''), 'document_name', IFNULL(NEW.document_name,''),
+                'other_title', IFNULL(NEW.other_title,''), 'other_description', IFNULL(NEW.other_description,'')
+            ),
+            COALESCE(NEW.edited_by, 0),
+            COALESCE(NEW.edited_at, NOW())
+        );
+    END IF;
+END$$
+
+DELIMITER ;

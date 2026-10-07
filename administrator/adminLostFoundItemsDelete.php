@@ -41,12 +41,33 @@ if ($data) {
     // STEP 2: SAVE DISPOSAL AUDIT
     // =================================================
 
-    $wasDisposed = 1;
+// STEP 2: SAVE DISPOSAL AUDIT (with snapshot)
+$wasDisposed = 1;
 
-    $deleteAudit = $conn->prepare("INSERT INTO lost_found_deletions (lost_found_id, category, status, was_claimed, was_resolved, was_disposed, deleted_by, deleted_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $deleteAudit->bind_param("issiiiis", $data['id'], $data['category'], $data['status'], $wasClaimed, $wasResolved, $wasDisposed, $deleted_by, $deleted_role);
-    $deleteAudit->execute();
-    $deleteAudit->close();
+$deleteAudit = $conn->prepare("
+    INSERT INTO lost_found_deletions (lost_found_id, category, status, was_claimed, was_resolved, was_disposed, deleted_by, deleted_role, image, reported_location, reporter_role, reporter_name, reporter_id, reporter_year, reporter_department, cash_amount,
+        gadget_type, gadget_brand, gadget_color, gadget_description,
+        document_type, document_name,
+        other_title, other_description,
+        created_by, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+");
+
+$deleteAudit->bind_param(
+    "issiiiis" . "sssssss" . "d" . "ssssssss" . "i" . "s",
+    $data['id'], $data['category'], $data['status'],
+    $wasClaimed, $wasResolved, $wasDisposed,
+    $deleted_by, $deleted_role,
+    $data['image'], $data['reported_location'],
+    $data['reporter_role'], $data['reporter_name'], $data['reporter_id'], $data['reporter_year'], $data['reporter_department'],
+    $data['cash_amount'],
+    $data['gadget_type'], $data['gadget_brand'], $data['gadget_color'], $data['gadget_description'],
+    $data['document_type'], $data['document_name'],
+    $data['other_title'], $data['other_description'],
+    $data['created_by'], $data['created_at']
+);
+$deleteAudit->execute();
+$deleteAudit->close();
 
     // =================================================
     // STEP 3: DELETE SELECTED RECORD ONLY
